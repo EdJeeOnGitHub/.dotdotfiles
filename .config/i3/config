@@ -274,7 +274,8 @@ bindsym XF86AudioPrev exec playerctl previous
 # App shortcuts
 bindsym $mod+w exec "/usr/bin/firefox"
 bindsym $mod+n exec "/usr/bin/thunar"
-bindsym Print exec "scrot ~/%Y-%m-%d-%T-screenshot.png"
+bindsym Print exec "flameshot full -p /home/ed/Pictures/Screenshots/"
+bindsym Shift+Print exec "flameshot gui -p /home/ed/Pictures/Screenshots/"
 
 # Redirect sound to headphones
 bindsym $mod+m exec "/usr/local/bin/switch-audio-port"
