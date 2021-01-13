@@ -4,5 +4,7 @@
             "before": ["j", "j"],
             "after": ["<Esc>"]
         }
-    ]
+    ],
+    "r.lintr.enable" : "false",
+    "r.lsp.diagnostics" : "false"
 }
