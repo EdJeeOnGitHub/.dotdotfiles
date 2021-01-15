@@ -22,7 +22,7 @@ exec_always --no-startup-id xrandr --output eDP1 --primary --mode 1920x1080 \
 # don't follow focus with mouse
 focus_follows_mouse no
 
-set $mod Mod4
+set $mod mod1 
 
 # workspace layouts:
 #default i3 tiling mode
