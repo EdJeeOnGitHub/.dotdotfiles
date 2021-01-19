@@ -6,5 +6,8 @@
         }
     ],
     "r.lintr.enable" : "false",
-    "r.lsp.diagnostics" : "false"
+    "r.lsp.diagnostics": "false",
+    "latex-workshop.docker.image.latex": "blang/latex:ubuntu",
+    "latex-workshop.docker.enabled": true,
+    "latex-workshop.view.pdf.viewer": "tab"
 }
