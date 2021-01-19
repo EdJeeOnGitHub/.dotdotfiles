@@ -1,0 +1,3 @@
+#!/bin/bash
+output=$(radeontop -l1 -d -)
+echo $output | grep  -Po '\K(?<=gpu) ([0-9]|[0-9][0-9])\.[0-9][0-9]\%' 

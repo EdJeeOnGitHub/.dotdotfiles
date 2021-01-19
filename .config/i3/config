@@ -15,10 +15,11 @@
 # Please see http://i3wm.org/docs/userguide.html for a complete reference!
 
 # Adding additional monitor
-exec_always --no-startup-id xrandr --output eDP1 --primary --mode 1920x1080 \
-	--pos 0x0 --rotate normal --output HDMI1 --mode 1920x1080 \
-	--pos 1920x0 --rotate normal --output VIRTUAL1 --off
-
+exec --no-startup-id xrandr --output DisplayPort-0 --off \
+	 --output DisplayPort-1 --off \
+	 --output HDMI-A-0 --mode 1920x1080 --pos 1920x0 --rotate normal \
+	 --output HDMI-A-1 --mode 1920x1080 --pos 0x0 --rotate normal \
+	 --output DVI-D-0 --off
 # don't follow focus with mouse
 focus_follows_mouse no
 
@@ -82,23 +83,23 @@ bindsym $mod+F1 exec "xed ~/.config/i3/keybindings"
 # installed.
 bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
 
-# change focus:
-bindsym $mod+j focus left
-bindsym $mod+k focus down
-bindsym $mod+u focus up
-bindsym $mod+ntilde focus right
-
 # alternatively, you can use the cursor keys:
 bindsym $mod+Left focus left
 bindsym $mod+Down focus down
 bindsym $mod+Up focus up
 bindsym $mod+Right focus right
 
-# move focused window:
-bindsym $mod+Shift+j move left
-bindsym $mod+Shift+k move down
-bindsym $mod+Shift+l move up
-bindsym $mod+Shift+ntilde move right
+# using vim style binds
+bindsym $mod+j focus down
+bindsym $mod+h focus left
+bindsym $mod+l focus right
+bindsym $mod+k focus up
+
+# move window with vim binds
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+l move right
+bindsym $mod+Shift+k move up
 
 # alternatively, you can use the cursor keys:
 bindsym $mod+Shift+Left move left
@@ -107,7 +108,7 @@ bindsym $mod+Shift+Up move up
 bindsym $mod+Shift+Right move right
 
 # split in horizontal orientation:
-bindsym $mod+h split h
+bindsym $mod+b split h
 
 # split in vertical orientation:
 bindsym $mod+v split v
@@ -281,8 +282,8 @@ bindsym Shift+Print exec "flameshot gui -p /home/ed/Pictures/Screenshots/"
 bindsym $mod+m exec "/usr/local/bin/switch-audio-port"
 
 
-# Lock the system
-bindsym $mod+l exec i3lock -i ~/.config/i3/i3-lock-screen.png -t -f
+# (I use l to move focus)Lock the system
+#bindsym $mod+l exec i3lock -i ~/.config/i3/i3-lock-screen.png -t -f
 
 set $bg-color            #2f343f
 set $inactive-bg-color   #2f343f

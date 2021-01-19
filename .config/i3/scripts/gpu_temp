@@ -1,0 +1,2 @@
+#!/bin/bash
+sensors | grep  -Po '\K(?<=edge:)[^\d]*(\d+)' | grep -Po '\d+'
