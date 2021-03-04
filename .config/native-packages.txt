@@ -75,7 +75,7 @@ i3blocks
 i3lock
 i3status
 inetutils
-intel-ucode
+#intel-ucode
 inxi
 ipw2100-fw
 ipw2200-fw
@@ -191,9 +191,9 @@ xdg-user-dirs
 xdg-user-dirs-gtk
 xdg-utils
 xed
-xf86-video-fbdev
-xf86-video-intel
-xf86-video-vesa
+#xf86-video-fbdev
+#xf86-video-intel
+#xf86-video-vesa
 xfce4-terminal
 xfsprogs
 xl2tpd

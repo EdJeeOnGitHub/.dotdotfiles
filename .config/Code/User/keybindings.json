@@ -11,5 +11,18 @@
         "command" : "type",
         "args": {"text" : "<-"},
         "when": "editorTextFocus && editorLangId == r"
+    },
+    {
+        "key": "ctrl+t",
+        "command": "-extension.vim_ctrl+t",
+        "when": "editorTextFocus && vim.active && vim.use<C-t> && !inDebugRepl"
+    },
+    {
+        "key": "ctrl+t",
+        "command": "-workbench.action.showAllSymbols"
+    },
+    {
+        "key": "ctrl+t",
+        "command": "terminal.focus"
     }
 ]

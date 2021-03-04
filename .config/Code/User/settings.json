@@ -5,9 +5,27 @@
             "after": ["<Esc>"]
         }
     ],
-    "r.lintr.enable" : "false",
-    "r.lsp.diagnostics": "false",
+    "r.lintr.enable" : false,
+    "r.lsp.diagnostics": false,
     "latex-workshop.docker.image.latex": "blang/latex:ubuntu",
     "latex-workshop.docker.enabled": true,
-    "latex-workshop.view.pdf.viewer": "tab"
+    "latex-workshop.view.pdf.viewer": "tab",
+    "workbench.colorTheme": "Gruvbox Dark (Hard)",
+    "git.ignoreLegacyWarning": true,
+    "window.menuBarVisibility": "toggle",
+    "workbench.statusBar.visible": true,
+    "breadcrumbs.enabled": true,
+    "terminal.integrated.commandsToSkipShell": [
+        "language-julia.interrupt"
+    ],
+    "julia.enableTelemetry": true,
+    "editor.renderControlCharacters": true,
+    "editor.fontLigatures": true,
+    "editor.fontFamily": "'Fira Code', 'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback'",
+    "terminal.integrated.fontFamily": " 'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback'",
+    "terminal.external.linuxExec": "kitty",
+    "editor.fontSize": 16,
+    "r.sessionWatcher": true,
+    "jupyter.interactiveWindowMode": "perFile",
+    "jupyter.askForKernelRestart": false
 }

@@ -6,9 +6,6 @@ python-multipledispatch
 python-rchitect
 radian
 rstudio-desktop-bin
-spicetify-cli
-spicetify-themes-git
-spotify
 visual-studio-code-bin
 yadm
 zoom
