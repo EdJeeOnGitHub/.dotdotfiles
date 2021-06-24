@@ -322,9 +322,6 @@ bindsym $mod+i exec rofi -modi drun -show drun -line-padding 4 \
                 -columns 2 -padding 50 -hide-scrollbar \
                 -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"
                 
-bindsym F9 exec rofi -modi drun -show drun -line-padding 4 \
-                -columns 2 -padding 50 -hide-scrollbar \
-                -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"
 
 bindsym $mod+o exec rofi -show window -line-padding 4 \
                 -lines 6 -padding 50 -hide-scrollbar \
