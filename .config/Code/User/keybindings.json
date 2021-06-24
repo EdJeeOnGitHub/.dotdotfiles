@@ -4,13 +4,13 @@
         "key": "ctrl+shift+m",
         "command": "type",
         "args" : {"text" : "%>%"},
-        "when" : "editorTextFocus && editorLangId == r"
+        "when" : "editorLangId == r || editorLangId == rmd"
     }
     ,{
         "key": "alt+-",
         "command" : "type",
         "args": {"text" : "<-"},
-        "when": "editorTextFocus && editorLangId == r"
+        "when": "editorLangId == r || editorLangId == rmd"
     },
     {
         "key": "ctrl+t",
