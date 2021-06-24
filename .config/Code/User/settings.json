@@ -5,6 +5,7 @@
             "after": ["<Esc>"]
         }
     ],
+    "vim.foldfix": true,
     "r.lintr.enable" : false,
     "r.lsp.diagnostics": false,
     "latex-workshop.docker.image.latex": "blang/latex:ubuntu",
@@ -27,5 +28,15 @@
     "editor.fontSize": 16,
     "r.sessionWatcher": true,
     "jupyter.interactiveWindowMode": "perFile",
-    "jupyter.askForKernelRestart": false
+    "jupyter.askForKernelRestart": false,
+    "r.bracketedPaste": true,
+    "r.rterm.linux": "/usr/bin/radian",
+    "workbench.editorAssociations": {
+        "*.ipynb": "jupyter.notebook.ipynb"
+    },
+    "vim.useSystemClipboard": true,
+    "vva.trustedDomain": true,
+    "editor.lineNumbers": "relative",
+    "vim.enableNeovim": true,
+    "vim.neovimPath": "/usr/bin/nvim"
 }
