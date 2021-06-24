@@ -16,3 +16,5 @@ call plug#end()
 "let ayucolor="dark"   " for dark version of theme
 "colorscheme ayu
 autocmd vimenter * ++nested colorscheme gruvbox
+
+let r_syntax_folding = 1
