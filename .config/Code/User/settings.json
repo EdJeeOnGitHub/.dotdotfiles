@@ -38,5 +38,7 @@
     "vva.trustedDomain": true,
     "editor.lineNumbers": "relative",
     "vim.enableNeovim": true,
-    "vim.neovimPath": "/usr/bin/nvim"
+    "vim.neovimPath": "/usr/bin/nvim",
+    "julia.enableCrashReporter": false,
+    "editor.inlineSuggest.enabled": true
 }
