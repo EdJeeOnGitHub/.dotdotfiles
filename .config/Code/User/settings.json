@@ -9,5 +9,11 @@
     "r.lsp.diagnostics": "false",
     "latex-workshop.docker.image.latex": "blang/latex:ubuntu",
     "latex-workshop.docker.enabled": true,
-    "latex-workshop.view.pdf.viewer": "tab"
+    "latex-workshop.view.pdf.viewer": "tab",
+    "editor.lineNumbers": "relative",
+    "git.ignoreLegacyWarning": true,
+    "terminal.integrated.commandsToSkipShell": [
+        "language-julia.interrupt"
+    ],
+    "julia.symbolCacheDownload": true
 }
