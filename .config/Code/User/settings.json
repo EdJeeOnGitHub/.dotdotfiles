@@ -5,8 +5,14 @@
             "after": ["<Esc>"]
         }
     ],
-    "r.lintr.enable" : "false",
-    "r.lsp.diagnostics": "false",
+    "editor.rulers" : [80],
+    "workbench.colorCustomizations": {
+        "editorRuler.foreground": "#b4758a"
+    },
+    
+    "r.lintr.enable" : false,
+    "r.bracketedPaste" : true,
+    "r.lsp.diagnostics": false,
     "latex-workshop.docker.image.latex": "blang/latex:ubuntu",
     "latex-workshop.docker.enabled": true,
     "latex-workshop.view.pdf.viewer": "tab",
@@ -15,5 +21,14 @@
     "terminal.integrated.commandsToSkipShell": [
         "language-julia.interrupt"
     ],
-    "julia.symbolCacheDownload": true
+    "julia.symbolCacheDownload": true,
+    "julia.enableTelemetry": false,
+    "julia.additionalArgs": [
+        "--threads=4"
+    ],
+    "python.defaultInterpreterPath": "/opt/conda/bin/python",
+    "terminal.integrated.inheritEnv": false,
+    "r.rterm.linux": "/usr/bin/radian",
+    "r.rmarkdown.knit.defaults.knitWorkingDirectory": "workspace root",
+    "window.zoomLevel": 1
 }
