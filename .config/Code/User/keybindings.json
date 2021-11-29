@@ -11,5 +11,9 @@
         "command" : "type",
         "args": {"text" : "<-"},
         "when": "editorTextFocus && editorLangId == r"
+    },
+    {
+        "key": "ctrl+shift+d",
+        "command": "editor.debug.action.selectionToRepl"
     }
 ]
