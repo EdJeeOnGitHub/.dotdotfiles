@@ -70,7 +70,10 @@ COMPLETION_WAITING_DOTS="true"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(
+	git
+)
+
 
 source $ZSH/oh-my-zsh.sh
 
@@ -87,6 +90,8 @@ if [[ -n $SSH_CONNECTION ]]; then
 else
 	export EDITOR='nvim'
 fi
+
+eval "$(starship init zsh)"
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
