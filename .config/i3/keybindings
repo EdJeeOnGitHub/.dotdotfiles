@@ -14,6 +14,7 @@ $mod = windows key
 --> Use Mouse+$mod to drag floating windows to their wanted position
 Mouse+$mod
 
+
 --> start a terminal
 $mod+Return
 
@@ -26,7 +27,7 @@ $mod+F1
 $mod+enter --> open terminal (xfce4-terminal)
 $mod+w --> open Browser (firefox)
 $mod+n --> open Filebrowser (Thunar)
-$mod+i // F9 --> app menu (rofi -- nice menu)
+$mod+i --> app menu (rofi -- nice menu)
 $mod+o // F10 --> chooe open windows over menu (rofi -- nice menu)
 Print-key --> screenshot
 

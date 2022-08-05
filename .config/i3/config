@@ -70,6 +70,9 @@ floating_modifier $mod
 # start a terminal:
 bindsym $mod+Return exec kitty
 
+bindsym $mod+Shift+t exec "xinput disable 14"
+bindsym $mod+Shift+y exec "xinput enable 14"
+
 # kill focused window:
 bindsym $mod+c kill
 
@@ -322,7 +325,7 @@ bindsym $mod+i exec rofi -modi drun -show drun -line-padding 4 \
                 -columns 2 -padding 50 -hide-scrollbar \
                 -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"
                 
-bindsym F9 exec rofi -modi drun -show drun -line-padding 4 \
+bindsym F8 exec rofi -modi drun -show drun -line-padding 4 \
                 -columns 2 -padding 50 -hide-scrollbar \
                 -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"
 
