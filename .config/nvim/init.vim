@@ -5,6 +5,8 @@ call plug#begin()
 Plug 'jpalardy/vim-slime'
 Plug 'airblade/vim-gitgutter'
 Plug 'morhetz/gruvbox'
+Plug 'vim-airline/vim-airline'
+Plug 'preservim/nerdtree'
 call plug#end()
 
 
