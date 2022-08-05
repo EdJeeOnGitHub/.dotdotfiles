@@ -1,0 +1,72 @@
+---
+title: "Survival Model Testing"
+author: "Becky Scurlock"
+date: '2022-06-10'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message = FALSE, warning = FALSE}
+# Load libraries
+library("tidyverse")
+library("survival")
+library("survminer")
+library("ggplot2")
+library("ggfortify")
+library("flexsurv")
+library("lubridate")
+
+# Load data
+df_all = read.csv("data/individual_data.csv")
+df_all = df_all %>% 
+  mutate(
+    treatment_time = ymd(treatment_time),
+    cens_event_time_lb = ifelse(death == 0, follow_up_time, event_time_lb), 
+    cens_event_time_ub = ifelse(death == 0, follow_up_time, event_time_ub),
+    left_interval = interval(treatment_time, cens_event_time_lb) %/% days(1), 
+    right_interval = interval(treatment_time, cens_event_time_ub) %/% days(1),
+    censoring = ifelse(death == 0, 0, ifelse(left_interval == right_interval, 1, 3)),
+    right_interval = right_interval + ifelse(left_interval == 0, 1, 0),
+    left_interval = left_interval + ifelse(left_interval == 0, 1, 0)
+  )
+```
+
+
+```
+df_all = df_all %>%
+  as_tibble()
+
+
+df_all %>%
+  filter(death == 1) %>%
+  filter(is.na(right_interval))  %>%
+  summarise(n_NA = sum(is.na(treatment_time)))
+
+
+df_all %>%
+  filter(is.na(treatment_time))
+
+
+```
+
+```{r}
+# Plot K-M curves for each study
+studies <- unique(df_all$study)
+studies <- studies[-8]  #Q: Why doesn't Luby work?
+
+i = 1
+for (study in studies) {
+  # Compute Kaplan-Meier estimates of survival probability over time
+  df_study = df_all[which(df_all$study == study),]
+  km_fit <- survfit(Surv(left_interval, right_interval, death, type = "interval") ~
+    as.factor(wtreatment), data = df_study, type = "kaplan-meier")
+  
+  # Plot Kaplan-Meier curves
+  print(autoplot(km_fit) + xlab("Days") + ylab("Survival Probability") + 
+    ggtitle(paste("K-M:", study)) + theme_bw())
+  i = i + 1
+}
+```

@@ -1,0 +1,255 @@
+\documentclass{article}
+
+
+
+\setlength\textwidth{135.5mm}
+\setlength\textheight{200mm}
+\setlength\topmargin{-10pt}
+\setlength\oddsidemargin{10mm}
+\setlength\evensidemargin{\oddsidemargin}
+\setlength\headheight{24pt}
+\setlength\headsep   {14pt}
+\setlength\topskip   {11.74pt}
+\setlength\maxdepth{.5\topskip}
+\setlength\footskip{15pt}
+
+
+
+
+
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\title{mCCT Impact Evaluation}
+\begin{document}
+\maketitle
+
+
+Our primary goal is to estimate the effect of mobile Conditional Cash Transfers (mCCTs)
+on the number of vaccinations\footnote{Penta-1 and Measles-1 have been identified as 
+our main focus} administered in 7 districts in Sindh\footnote{TODO: List 
+districts here.}. As a secondary goal, we'd like to estimate to what extent these 
+estimates are externally valid, and whether we can extrapolate estimated treatment 
+effects to similar districts not in the RCT. 
+
+
+\section{Data}
+Due to the ZM data, we have 
+
+
+
+\section{Estimation}
+
+
+\textit{It's not entirely clear to me what level of data aggregation we're going to have 
+access to - for now let's index $i$ for individuals, UCs, whatever.}
+
+
+\subsection*{The Simplest Case: TWFE}
+The simplest way to estimate the effect of mCCTs on vaccination numbers is a 
+"static" TWFE-regression:
+
+
+\begin{align*}
+   Y_{idt} &= \delta_d + \tau_t + \beta \text{treat}_{idt} + \varepsilon_{idt} 
+\end{align*}
+
+Under a parallel trends assumption and homogeneous effects, we interpret $\hat{\beta}$ as the difference-in-differences estimator 
+and the programme $ATT$. However, in the presence of staggered treatment timing 
+(which we face, as each district is rolled into treatment at different times) the 
+static TWFE regression makes "forbidden" comparisons. As described by Goodman-Bacon, rather than comparing treated 
+units to un-treated units we compare later treated units to earlier treated units.
+
+There's been a methodological explosion dealing with these issues and next we 
+turn to a proposed solution.
+
+\subsection*{Slightly Less Simple: Callaway and Sant'Anna}
+\subsubsection*{ATTs}
+Callaway and Sant'Anna suggest a very simple solution. At its heart, difference-in-differences
+is comparing two differences in means. CA's proposal is just to calculate these means
+whilst keeping careful track of the comparisons we're making. They create the 
+variable $g \in \{ \text{Jan, Feb, ..., Dec}\}$ which corresponds to when a group 
+is first treated. Then, they propose the target parameter:
+
+
+\begin{align*}
+   ATT(g,t) &= E\left[ 
+      Y_t(g) - Y_t(0) | G_g = 1
+   \right]
+\end{align*}
+
+This is the difference between being treated, $Y_t(g)$, and 
+not being treated, $Y_t(0)$, for each group $g$ at each time period $t$. Unfortunately, 
+we only ever observe one of $Y_t(g), Y_t(0)$ - this is where the parallel trends 
+assumption comes in:
+\begin{align*}
+   E\left[Y_t(0) - Y_{t-1}(0) | \underbrace{G_g = 1}_{\text{{\tiny Units first treated in $g$.}}}\right] &= 
+   E\left[
+      Y_t(0) - Y_{t-1}(0) | \underbrace{G_g  = 0 , D_s = 0}_\text{{\tiny Units not yet treated.}} 
+   \right],  \\ \forall g = 2, ... \mathcal{T}, & (s,t) = 2, ..., \mathcal{T} \text{ s.t. } t \geq g
+\end{align*}
+
+    i.e. in absence of initial treatment in period $g$, units would 
+    have the same outcome path as those not yet treated. 
+
+   Without covariates this leads to a very simple comparison estimator:
+
+   \begin{align*}
+      \hat{ATT}(g,t) = \frac{1}{N_g} \sum_{i=1}^{N_g}  (Y_{t,i} - Y_{g-1,i}) \mathbb{I}\{G_{gi} = 1\} -
+      \frac{1}{N_{nyt(g)}} \sum_{i=1}^{N_{nyt(g)}} (Y_{t,i} - Y_{g-1,i})\mathbb{I}\{nyt(g)_i\} 
+   \end{align*}
+
+
+   We can do this easily with the 7 districts in the RCT and estimate $ATT$s for 
+   6 groups \footnote{We have to drop the last district treated as we have no valid comparison 
+   group for it.} and $\approx$ 24 time periods.
+   
+  \subsubsection*{Treatment Effects} 
+   Now we have our $ATT$ building blocks we can construct actual parameters of
+   interest. These essentially take some weighted sum of the $ATT$s in a way that 
+   makes "economic" sense. They all take the form of:
+
+   \begin{align*}
+      \theta &= \sum_{g \in \mathcal{G}}\sum_{t=2}^\mathcal{T} w(g,t)\cdot ATT(g,t)
+   \end{align*}
+
+   We're probably interested in $\theta_{es}(e)$ - the "event study" estimand - that 
+   describes how average treatment effects vary with length of \textit{exposure} or 
+   \textit{event time}.
+
+
+   Put example here.
+
+   Another parameter we might care about is averaging across time and asking 
+   what is a single parameter to describe each district's treatment effect:
+   \begin{align*}
+      \theta_{sel}(\tilde{g}) &= \frac{1}{\mathcal{T} - \tilde{g} + 1} \sum_{t = \tilde{g}}^\mathcal{T} ATT(\tilde{g}, t)
+   \end{align*}
+
+   However, this still leaves us with $G-1$ parameters. If we want a single 
+   summary parameter of the effect of the programme, we might like to consider:
+
+   \begin{align*}
+      \theta_{sel}^O = \sum_{g \in \mathcal{G}} \theta_{sel}(g) P(G = g | G \leq \mathcal{T})
+   \end{align*}
+   which averages over each district's summary treatment effect, weighted by the 
+   probability a district is treated at a certain point (for us this is just $1/7$ 
+   due to random assignment).
+
+
+   An alternative would be to simply sum over all the $ATT(g,t)$s and longer 
+   treated districts have more of an impact on the overall estimand, rather than simple 
+   averaging across districts:
+
+   \begin{align*}
+      \theta_W^O &= \frac{1}{\kappa} \sum_{g \in \mathcal{G}} \sum_{t=2}^\mathcal{T} 
+      \mathbb{I}\{t \geq g\} ATT(g,t) P(G = g | G \leq \mathcal{T})
+   \end{align*}
+
+
+
+   \subsection*{Using Non-Experimental Data}
+
+   Since we have data on every district in Sindh we can think about what assumptions 
+   we'd need to use these districts in our difference-in-differences estimator.
+
+   \subsubsection*{A big parallel trends assumption}
+   We know that the seven selected districts were chosen because they have the 
+   lowest vaccination rates using Measles-1 and Penta-3 data from August (TODO year here). This 
+   creates problems for the external validity of estimates, if we believe 
+   the level of vaccination will be correlated with the size of treatment effects 
+   we're only observing effects for a selected sample. However, this doesn't create 
+   issues for the \textit{internal} validity of our estimates since within these 
+   seven districts treatment timing is still completely random.
+
+   Fortunately, under some assumptions, this also shouldn't violate  our 
+   parallel trends assumption. This 
+   is because selection is on \textit{levels} and not \textit{differences}.  
+   Provided levels aren't correlated with differences then selection on levels 
+   doesn't matter and we can use the remaining districts in our not-yet-treated 
+   group.
+
+   \textbf{Thoughts:}
+
+   This is a pretty heroic exercise: we need to assume parallel trends holds across 
+   all 30 districts. There's also some tension in the belief that vaccination 
+   levels will be correlated with treatment effects whilst also not being correlated 
+   with differences.
+
+
+   The good news is that we have lots of data to test pre-trends and we can even 
+   test whether levels are correlated with differences or treatment effects.\footnote{Although 
+   Roth (2020) shows that such pre-trend tests aren't always ideal.}
+
+   \subsubsection*{A smaller assumption}
+
+   Using direct knowledge of the site selection mechanism we can estimate the 
+   probability a district was included in the RCT sample of seven districts. Since the 
+   decision to use Measles-1 and Penta-3 as the vaccination metrics was taken 
+   orthogonal to beliefs about treatment effects or parallel trends we can 
+   treat this as a "as good as random" choice.  
+
+   By permuting through alternative choices of vaccination metrics and observing 
+   how often a district is included in the RCT due to having the lowest vaccination 
+   rate, for that set of metrics, we can directly calculate the propensity 
+   score for RCT inclusion.
+   
+   In practice when we do this only five additional districts satisfy the overlap 
+   condition, $0 < p(X) < 1$, and have inclusion probabilities not equal to 0 or 1. 
+
+   Using this propensity score now requires a conditional parallel trends assumption:
+
+   
+
+
+\begin{align*}
+   E\left[Y_t(0) - Y_{t-1}(0) |\  p(X), G_g = 1\right] &= 
+   E\left[
+      Y_t(0) - Y_{t-1}(0) |\  p(X), G_g  = 0 , D_s = 0
+   \right],  \\ \forall g = 2, ... \mathcal{T}, & (s,t) = 2, ..., \mathcal{T} \text{ s.t. } t \geq g
+\end{align*}
+
+
+Our new assumption is: Conditional on the probability of selection into the RCT, 
+all 12 districts would have had the same path of untreated outcomes. Whilst 
+we have institutional knowledge that sites weren't selected in relation to 
+parallel trends we can control directly for selection and alleviate some concerns. 
+
+The new estimator is a little cumbersome:
+
+\begin{align*}
+  ATT(g,t) &= E\left[
+     \left(
+   \frac{G_g}{E[G_g]} -
+   \frac{\frac{
+      p_{g,t}(X)(1 - D_t)(1 - G_g)
+   }{
+      1 - p_{g,t}(X)
+   }}{
+  E\left[    \frac{
+   p_{g,t}(X)(1 - D_t)(1 - G_g)
+      }{1 - p_{g,t}}
+   \right]
+      }
+     \right)
+     (Y_t - Y_{g-t})
+  \right] 
+\end{align*}
+
+
+Our permutation procedure directly estimates the propensity score non-parametrically -
+we can just plug in out estimate of $p_{g,t}(X)$ for each district.
+
+\textbf{Thoughts:}
+
+
+We now have a parallel trends assumption that's much easier to stomach - 
+five "similar" districts rather than all of Sindh and we can control  
+for the selection mechanism.
+
+
+\section{Extrapolation}
+
+
+
+\end{document}

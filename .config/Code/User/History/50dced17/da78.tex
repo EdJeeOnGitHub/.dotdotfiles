@@ -1,0 +1,80 @@
+\documentclass{article}
+
+\usepackage[margin=0.5in]{geometry}
+\usepackage{bm}
+\usepackage{amsmath}
+\setlength\textwidth{135.5mm}
+\setlength\textheight{200mm}
+\setlength\topmargin{-10pt}
+\setlength\oddsidemargin{14mm}
+\setlength\evensidemargin{\oddsidemargin}
+\setlength\headheight{24pt}
+\setlength\headsep   {14pt}
+\setlength\topskip   {11.74pt}
+\setlength\maxdepth{.5\topskip}
+\setlength\footskip{15pt}
+
+
+\title{Adaptive Trials and Preferences}
+\author{Edward Jee}
+\begin{document}
+% \maketitle
+
+
+Many randomised control trials in economics seek to estimate some parameter of 
+interest with minimal disruption to in-sample participants.  An emerging trend in programme 
+evaluation, popularised by A/B testing amongst technology firms, is the use of 
+"multi-armed bandits" (MABs) or adaptive trials which speak directly to the goal 
+of maximising sample welfare. As sample participants are rolled into programmes 
+across multiple waves, adaptive trials seek to overweight promising treatment 
+arms whilst underweighting arms considered to be less promising.
+
+
+
+Traditionally, MABs focus on a single outcome of concern and attempt to maximise 
+$S_t = \sum^t_{0}Y_t$ - for example, Caria et al (2021), maximise the 
+two-month follow-up employment rate of job seekers in Jordan. However, in 
+practice economists and policymakers often observe data on multiple outcomes and 
+must design an optimal policy accounting for individual welfare aggregated across 
+a range of outcomes or goods. Traditionally, economists specify a primary outcome 
+of interest and use this as a metric for optimal policy decisions. 
+
+    
+Taking this decision seriously 
+implies the utility function of participants only depends on one outcome or good 
+and this particular good is known to the economist. Furthermore, this makes it 
+easy to mistake the loss or welfare function of the economist for the trial 
+participants - ideally we'd like to elicit the preferences of in-sample participants 
+and use this welfare function to inform treatment assignment. 
+
+
+My goal is  to elicit preferences, characterised by the 
+random utility model (RUM), whilst adaptively assigning subjects 
+to treatment arms. By jointly modelling uncertainty over marginal rates of substitution 
+across goods and treatment effect uncertainty we choose the each arm in proportion 
+to which we believe it's optimal.
+
+\subsection*{The "Traditional" Bandit}
+
+
+Traditional Thompson sampling involves:
+
+
+    \begin{itemize}
+        \item Generate a prior over each arm's rewards.
+        \item Take a random draw from this prior distribution and choose the best action given your draw.
+        \item Observe the reward associated with your action.
+        \item Update your posterior over arm rewards.
+        \item Today's posterior is tomorrow's prior $\rightarrow$ return to step two.
+    \end{itemize}
+
+
+However, with multiple goods we observe a  vector  $Y_t = \begin{bmatrix} y^1_t & y^2_t & ... & y^j_t\end{bmatrix}$
+Now each treatment arm $k$ has expected reward vector $\bm{\mu}_k = \begin{bmatrix}
+    \mu^1_k & \mu^2_k & ... & \mu^j_k
+\end{bmatrix}'$. 
+%     \item We need to maximise some scalar $S_t = f(Y_t)$.
+%     \item Choosing a single outcome corresponds to $Y_t' e_j$ for some $j$.
+%     \item Maximising the sum of the $y_t$s corresponds to $Y_t' \mathbf{1}$.
+% \end{itemize}
+\end{document}

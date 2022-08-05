@@ -1,0 +1,17 @@
+\documentclass{article}
+\usepackage[]{amsmath}
+\usepackage[]{takeup_beamer_header}
+\begin{document}
+    
+ Finite-mixture statistical model ($M = 2$) 
+ \begin{align*} 
+ \prob{D(g) = d} = \prob{D = g | G = g} = \sum_m^M \lambda_m \frac{\phi\left(\frac{d - \pi_{gm}}{\eta_{gm}}\right)}{1 - \Phi\left(\frac{d - \pi_{gm}}{\eta_{gm}}\right)}  
+ \end{align*} 
+ and 
+ \begin{align*} 
+   \boldsymbol{\rho} &\sim \mathtt{Dirichlet}(\boldsymbol{\iota}_M) \\ 
+   \pi_{gm} &\sim \mathtt{Normal^+}(0, 1) \\ 
+   \eta_{gm} &\sim \mathtt{Normal^+}(0, 1). 
+ \end{align*} 
+\end{document}
+

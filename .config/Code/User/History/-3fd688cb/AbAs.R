@@ -1,0 +1,457 @@
+script_options <- docopt::docopt(sprintf(
+"Usage:
+  run_sim [options]
+ Options:
+  --num-rounds=<num-rounds>, -r <num-rounds>  Number of rounds in the trial [default: 15]
+  --num-per-round=<num-per-round>, -n <num-per-round>  Number of participants per round [default: 100]
+  --num-cluster-cores=<num-cluster-cores>  Number of cores to use in 'outer' cluster [default: 32]
+  --p-adjust-method=<p-adjust-method>, -p <p-adjust-method> Method to adjust p-values for multiple testing [default: none]
+  --num-p-adjust=<num-p-adjust>, -P <num-p-adjust>  Number of comparisons to adjust for [default: 1]
+"),
+  args = if (interactive()) "--num-cluster-cores=4" else commandArgs(trailingOnly = TRUE) 
+)
+
+script_options = script_options %>%
+    modify_at(.at = vars(
+      contains("num")), as.integer) 
+
+N_rounds = script_options$num_rounds
+N_per_round = script_options$num_per_round
+
+script_options
+
+source("code/power-functions.R")
+library(furrr)
+
+
+sim_and_fit =  function(draw, hyper_params){
+
+            res = simulate_data(
+                seed = draw, 
+                hyper_params = hyper_params
+                ) %>%
+                    fit_estimators()
+                    
+            res_tidy = res$tidy_tests %>%
+                filter(
+                    str_detect(term, "treatment")
+                ) %>%
+                mutate(signif = p.value < 0.05, TE = hyper_params$TEs[2])
+    return(res_tidy)
+}
+
+thompson_TE = function(signif_vec, TE_vec, batch = 15){
+    N = length(signif_vec)
+    df = tibble(
+        signif = signif_vec,
+        TE = TE_vec
+    )
+    set.seed(N)
+    # Conditional Mean Method
+    cond_mean_df = df %>%
+        mutate(bin = cut_number(TE, floor(sqrt(N)))) %>%
+        group_by(TE_bin = bin) %>%
+        summarise(
+            n_bin = n(), 
+            n_succ = sum(signif), 
+            pr_signif = mean(signif),
+            TE_mean = mean(TE),
+            TE_sd = sd(TE))  %>%
+        mutate(
+            TE_sd = if_else(n_bin == 1, 0, TE_sd),
+            p_val = map2_dbl(n_succ, n_bin, ~suppressWarnings(prop.test(x = .x, n = .y, p = 0.8)$p.value)),
+            sample_pr = p_val/sum(p_val)
+        ) 
+    cond_mean_s_vec = sample(1:nrow(cond_mean_df), batch, replace = TRUE, prob = cond_mean_df$sample_pr)
+    mu_vec = cond_mean_df$TE_mean[cond_mean_s_vec]
+    sd_vec = cond_mean_df$TE_sd[cond_mean_s_vec]
+    cond_mean_next_TEs = rnorm(batch, mu_vec, sd_vec + 1/N)
+    # GLM Method
+    
+    glm_fit = glm(
+        signif_vec ~ TE_vec, 
+        family = binomial(link = "logit")
+    )
+    if (glm_fit$converged == TRUE) {
+
+        df =  df %>%
+        mutate(
+            pr = predict(glm_fit, type = "response"),
+            dist = abs(pr - 0.8), 
+                rank = rank(dist), 
+                close = rank <= 0.25*N) 
+        N_ok = df %>%
+            filter(close == TRUE) %>%
+            nrow() 
+        if (N_ok > 0) {
+            linear_approx = df %>%
+                filter(close == TRUE) %>%
+                lm(TE ~ pr, data = .)    
+            lin_pred = predict(linear_approx, newdata = list(pr = 0.8), se.fit = TRUE)
+            glm_next_TEs = rnorm(batch, mean = lin_pred$fit, sd = lin_pred$se.fit + 1/N)
+        } else {
+            glm_next_TEs = NULL
+        }
+
+
+    } else {
+        glm_next_TEs = NULL 
+    }
+    next_TEs = c(cond_mean_next_TEs, glm_next_TEs)
+    next_TEs = pmax(pmin(next_TEs, 1), 0.0)
+    if (any(is.na(next_TEs) | is.nan(next_TEs))) {
+        # browser()
+        stop("NA TEs suggested")
+    }
+    return(next_TEs)
+}
+
+
+
+
+
+
+
+sim_and_fits = function(hyper_params){
+    res = map2_dfr(hyper_params, 1:length(hyper_params), ~sim_and_fit(.y, .x))
+    return(res)
+}
+
+
+
+
+run_sim = function(N, hyper_param_func, batch = 15){
+    initial_TEs = seq(from = 0.0, to = 0.2, length.out = 20)
+
+    hps = map(initial_TEs, ~hyper_param_func(TEs = c(0, .x))) 
+
+    res_df = sim_and_fits(hps)
+    for (i in 1:N){
+        next_TEs = thompson_TE(res_df$signif, res_df$TE, batch = batch)
+        hps = map(next_TEs, ~hyper_param_func(TEs = c(0, .x))) 
+        new_res = sim_and_fits(hps)
+        res_df = bind_rows(
+            res_df,
+            new_res
+        )
+    }
+    hyper_params = hps[[1]]
+    res = c(
+        hyper_params[!str_detect(names(hyper_params), "TEs|pr_arm")],
+        "pr_arm" = hyper_params$pr_arm
+    ) 
+    res_df = bind_cols(
+        res_df,
+        as_tibble(res)
+    )
+    return(res_df)
+}
+
+anon_f = function(TEs){
+    default_hyper_params(
+        dgp = "icc",
+        N = 400,
+        n_clusters = 400/8,
+        baseline_mean  = 0.10,
+        rho = 0.1,
+        TEs = TEs
+    )
+}
+
+
+param_grid = expand.grid(
+    N = c(400, 600, 800, 1000, 1200, 1400),
+    rho = c(0.1, 0.25, 0.5, 0.75, 0.9)
+) %>% as_tibble() %>%
+    mutate(n_clusters = floor(N/8)) 
+
+tictoc::tic()
+if (interactive()) {
+    plan(multisession, workers = 8)
+} else {
+
+  library(parallel)
+  library(Rmpi)
+  cl = makeCluster(script_options$num_cluster_cores, type = "MPI")
+  plan(
+    list(
+      tweak(future::cluster, workers = cl),
+      multicore
+    )
+  )
+}
+sim_df = future_pmap_dfr(
+    list(
+        param_grid$N,
+        param_grid$rho,
+        param_grid$n_clusters
+    ),
+    ~run_sim(
+        N = N_rounds,
+        hyper_param_func = function(TEs) default_hyper_params(
+            TEs = TEs,
+            N = ..1,
+            rho = ..2,
+            n_clusters = ..3,
+            dgp = "icc",
+            baseline_mean = 0.1
+        ),
+        batch = N_per_round
+    ),
+    .options = furrr_options(
+        seed = TRUE
+    ),
+    .progress = TRUE
+)
+tictoc::toc()
+
+tictoc::tic()
+second_param_grid = expand.grid(
+    N = seq(from = 400, to = 2000, by = 200), 
+    rho = c(0.1, 0.25, 0.5, 0.75, 0.9)
+) %>% as_tibble() %>%
+    mutate(n_clusters = floor(N/8)) 
+second_sim_df = future_pmap_dfr(
+    list(
+        second_param_grid$N,
+        second_param_grid$rho,
+        second_param_grid$n_clusters
+    ),
+    ~run_sim(
+        N = N_rounds,
+        hyper_param_func = function(TEs) default_hyper_params(
+            TEs = TEs,
+            N = ..1,
+            rho = ..2,
+            n_clusters = ..3,
+            dgp = "icc",
+            baseline_mean = 0.1, 
+            pr_arm = c(1/3, 2/3)
+        ),
+        batch = N_per_round
+    ),
+    .options = furrr_options(
+        seed = TRUE
+    ),
+    .progress = TRUE
+)
+tictoc::toc()
+
+
+
+sim_df %>%
+    write_csv("data/output/sim-data-initial.csv")
+
+second_sim_df %>%
+    write_csv("data/output/second-sim-data-initial.csv")
+
+if (!interactive()) {
+  stopCluster(cl)
+  mpi.quit()
+}
+# second_sim_df %>%
+#     group_by(N, rho, model, vcv) %>%
+#     mutate(draw = 1:n()) %>%
+#     # filter(draw > 1000) %>%
+#     summarise( 
+#         mean_TE = mean(TE), 
+#         sd = sd(TE),
+#         median_TE = median(TE)
+#     ) %>%
+#     ggplot(aes( 
+#         x = N, 
+#         colour = factor(rho),
+#         y = mean_TE,
+#         ymin = mean_TE - 1.96*sd,
+#         ymax = mean_TE + 1.96*sd
+#     )) +
+#     geom_pointrange() +
+#     geom_line() +
+#     theme_bw()
+
+# second_sim_df %>%
+#     group_by(N, rho, model, vcv) %>%
+#     mutate(draw = 1:n()) %>%
+#     filter(draw > 200) %>%
+#     summarise( 
+#         mean_TE = mean(TE), 
+#         sd = sd(TE),
+#         median_TE = median(TE)
+#     ) %>%
+#     ggplot(aes( 
+#         x = N, 
+#         colour = factor(rho),
+#         y = mean_TE
+#     )) +
+#     geom_point() +
+#     geom_line() +
+#     theme_bw()
+
+# second_sim_df %>%
+#     filter(rho == 0.1) %>%
+#     group_by(N, rho, model, vcv) %>%
+#     mutate(draw = 1:n()) %>%
+#     filter(draw > 200) %>%
+#     summarise( 
+#         mean_TE = mean(TE), 
+#         sd = sd(TE),
+#         median_TE = median(TE)
+#     ) 
+
+# second_sim_df %>%
+#     filter(rho == 0.1) %>%
+#     group_by(N, rho, model, vcv) %>%
+#     mutate(draw = 1:n()) %>%
+#     filter(draw > 100) %>%
+#     ggplot(aes( 
+#         x = draw, 
+#         y = TE, 
+#         colour = factor(N)
+#     )) +
+#     geom_point(alpha = 0.4) +
+#     theme_minimal() +
+#     labs(title = "Power Bandit")
+
+# sim_df %>%
+#     filter(rho == 0.1) %>%
+#     group_by(N, rho, model, vcv) %>%
+#     mutate(draw = 1:n()) %>%
+#     filter(draw > 100) %>%
+#     ggplot(aes( 
+#         x = draw, 
+#         y = TE, 
+#         colour = factor(N)
+#     )) +
+#     geom_point(alpha = 0.4) +
+#     theme_minimal() +
+#     labs(title = "Power Bandit")
+
+# sim_df %>%
+#     group_by(N, rho, model, vcv) %>%
+#     mutate(
+#         bin = cut_width(TE, 0.02), 
+#         signif = as.numeric(signif)
+#     ) %>%
+#     group_by(N, rho, bin) %>%
+#     summarise( 
+#         n_bin = n(), 
+#         min_TE = min(TE), 
+#         mean_TE = mean(TE),
+#         pr_signif = mean(signif)
+#     ) %>%
+#     mutate(dist_80 = abs(pr_signif - 0.8)) %>%
+#     filter(dist_80 == min(dist_80) & dist_80 < 0.05) %>%
+#     summarise_all(mean) %>%
+#     select(
+#         N, rho, bin, pr_signif,min_TE, mean_TE, n_bin)  %>%
+#     ggplot(aes( 
+#         x = N, 
+#         y = min_TE, 
+#         colour = factor(rho)
+#     )) +
+#     geom_point() +
+#     geom_line()
+    
+    
+#      %>%
+#     ggplot(aes( 
+#         x = N, 
+#         y = min_TE, 
+#         colour = factor(rho)
+#     )) +
+#     geom_point() +
+#     geom_line()
+
+
+
+# tictoc::tic()
+# initial_sim = run_sim(
+#     N = 50,
+#     hyper_param_func = function(TEs) default_hyper_params(
+#         TEs = TEs, 
+#         dgp = "icc",
+#         rho = 0.1,
+#         baseline_mean = 0.1,
+#         N = 400, n_clusters = 400/8)
+# ) 
+# tictoc::toc()
+# initial_sim
+
+# initial_sim %>%
+#     mutate(x = 1:n()) %>%
+#     filter( x > 25) %>%
+#     summarise(mean(signif))
+
+# initial_sim %>%
+#     mutate(x = 1:n()) %>%
+#     filter(vcv == "standard", model == "chisq") %>%
+#     ggplot(aes(
+#         x = x, 
+#         y = TE,
+#         colour = vcv
+#     )) +
+#     geom_point() +
+#     theme_minimal() +
+#     labs( 
+#         x = "Iteration", 
+#         title = "MDE Bandit Kind Of"
+#     ) +
+#     geom_smooth()   
+
+
+# initial_sim %>%
+#     mutate(signif = as.numeric(signif)) %>%
+#     filter(
+#         model == "chisq" & vcv == "standard"
+#     ) %>%
+#     mutate(bin = cut_width(TE, 0.01)) %>%
+#     group_by( 
+#         bin
+#     ) %>%
+#     summarise(across(where(is.numeric), mean)) %>%
+#     ggplot(aes(x = TE, y = signif)) +
+#     geom_point() + 
+#     geom_line() +
+#     geom_hline(yintercept = 0.8)
+
+# initial_sim %>%
+#     group_by(model, vcv) %>%
+#     mutate(bin = cut_width(TE, 0.005)) %>%
+#     group_by(TE_bin = bin, model, vcv) %>%
+#     summarise(pr_signif = mean(signif), 
+#               n_draws = n())  %>%
+#     filter( 
+#         pr_signif > 0.8 & pr_signif < 0.9
+#     )
+
+# ed %>%
+#     mutate(bin = cut_width(TE, 0.01)) %>%
+#     group_by(TE_bin = bin) %>%
+#     summarise(pr_signif = mean(signif), 
+#               n_draws = n()) 
+
+# ed %>%
+#     mutate(bin = cut_number(TE, nrow(.)/30)) %>%
+#     group_by(bin) %>%
+#     summarise(pr_signif = mean(signif), 
+#               bin_mean = mean(TE))  %>%
+#     ungroup() %>%
+#     ggplot(aes( 
+#         x = bin_mean, 
+#         y = pr_signif
+#     )) +
+#     geom_point() 
+
+
+
+
+
+
+# ed %>%
+#   ggplot(aes(
+#       x = TE, 
+#       y = as.numeric(signif)
+#   )) +
+#   stat_summary_bin(fun.y='mean', bins = 50,
+#                    color='orange', size=2, geom='point') +
+#                    geom_hline(yintercept = 0.8)

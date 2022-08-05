@@ -1,0 +1,202 @@
+\documentclass{article}
+
+\usepackage[english]{babel}
+\usepackage{amsthm}        
+\newtheorem{theorem}{Theorem}
+
+\usepackage{mathtools}
+\DeclareMathOperator\supp{supp}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bbm}
+\newtheorem{corollary}{Corollary}[theorem]
+
+\author{Edward Jee}
+\title{Multiple Hypothesis Testing}
+\begin{document}
+\maketitle
+
+\textit{Drawn from slides by Thomas Wiemann}
+
+\section*{}
+Suppose, we want to test multiple hypotheses simultaneously. We could be 
+interested in multiple properties of a distribution or want to control the 
+type 1 error rate across multiple inferences\footnote{See the appendix at the 
+end of this note for more details.}
+
+    
+Let $\theta, \theta_0 \in \mathbbm{R}^d, $ for some integer $d \in \mathbbm{N},$ and consider\begin{align}
+        H_0: \theta = \theta_0\quad \text{versus} \quad H_1: \theta = \theta_0.
+\end{align}
+    
+    Because $\theta$ is a vector, we cannot proceed with the test-statistics considered thus far. 
+    \subsubsection*{Preparation}
+    First, let's add some tools to adapt the continuous mapping theorem to 
+    statements about convergence in distribution:
+    
+    \begin{theorem}\label{cmt-d}
+        Let $X_1, ..., X_n$ and $X$ be random vectors in $\mathbbm{R}^m$. Suppose 
+        that $g \ : \mathbbm{R}^m \rightarrow \mathbbm{R}^d$ is continuous at 
+        each point in the set $C$ such that $P(X \in C) = 1$. Then:
+        \begin{align*}
+            X_n \xrightarrow{d} X \implies g(X_n) \xrightarrow{d} g(X)
+        \end{align*}
+    \end{theorem}
+
+
+    We've come across this before! Specifically, Slutsky is the case where 
+    $X_n \xrightarrow{d} X, Y_n \xrightarrow{d} c$ for some constant $c$ and
+     since addition and 
+    multiplication are continuous operations we have $X_n' Y_n \xrightarrow{d} X'c$, 
+    $X_n + Y_n \xrightarrow{d} X + c$. 
+
+
+    Next, we recall Corollary 3 from Lecture 2A, repeated below as Corollary \ref{chisq}. 
+    \begin{corollary}\label{chisq}
+    Let $X \sim N(\mu, \Sigma)$ where $\supp X = \mathbbm{R}^m$. Then \begin{align}
+        (X - \mu)^\top \Sigma^{-1}(X - \mu) \sim \chi^2(m).
+    \end{align}  
+    \end{corollary}
+    \subsubsection*{Constructing a Test Statistic}
+    Let $\hat{\theta}_n$ be an estimator for $\theta$ such that \begin{align}\label{sl_5:eq_normallimmutlivar}
+        \sqrt{n}\hat{\Sigma}_n^{-\frac{1}{2}}\left(\hat{\theta}_n - \theta\right) \overset{d}{\to} N(0, I_d),
+    \end{align}
+    where $\hat{\Sigma}_n^{-\frac{1}{2}}$ is a consistent estimate of $\Sigma^{-\frac{1}{2}}: \Sigma^{-\frac{1}{2}} \Sigma^{-\frac{1}{2}} = \Sigma$, Then,
+    \begin{align}\label{sl_5:eq_tnmultivar}
+        T_n = n\left(\hat{\theta}_n - \theta_0\right)^\top\hat{\Sigma}_n^{-1}\left(\hat{\theta}_n - \theta_0\right).
+    \end{align}
+    $T_n$ captures the squared deviations of $\hat{\theta}_n$ from $\theta_0$ scaled by $\hat{\Sigma}_n^{-1}.$
+
+    We can leverage large sample theory to show that $T_n$ is asymptotically $\chi^2$ distributed with $d$ degrees of freedom.
+    
+    \begin{corollary}\label{sl_5:cor_chi2}
+     Let  $\hat{\theta}_n$ be an estimator for $\theta \in \mathbbm{R}^d$ such that \eqref{sl_5:eq_normallimmutlivar} holds. Then for $T_n$ defined by  \eqref{sl_5:eq_tnmultivar}, it hold that \begin{align}
+            T_n \overset{d}{\to} \chi^2(d).
+        \end{align}
+    \end{corollary}
+
+
+    This is great news - we now have the tools to calculate a test statistic and 
+    we know its distribution under the null hypothesis.
+
+    
+
+    Corollary \ref{sl_5:cor_chi2} can then be used to show that $T_n$ is a useful test statistic:
+    
+    \begin{theorem}
+     Let  $\hat{\theta}_n$ be an estimator for $\theta \in \mathbbm{R}^d$ such that \eqref{sl_5:eq_normallimmutlivar} holds. Then for $T_n$ defined by  \eqref{sl_5:eq_tnmultivar}, it hold that \begin{align}
+            P(T_n > c_{d, 1-\alpha}\vert \: H_0 \text{ is true}) \to \alpha,
+        \end{align}
+        where $c_{d, 1-\alpha}$ is the $1-\alpha$ quantile of a $\chi^2$ distribution with $d$ degrees of freedom.
+    \end{theorem}
+
+    \subsubsection*{Testing our Hypotheses}
+
+    \textbf{Step 1:}
+    $Z_n = \sqrt{n}\Sigma^{-\frac{1}{2}} ( \hat{\theta}_n - \theta_0)$
+    \\
+    \textbf{Step 2:}
+    Define $g(a) = a\top a$
+    \\
+    \textbf{Step 3:}
+    $Z_n \xrightarrow{d} N(0, I_d)$
+    \\
+    \textbf{Step 4:}
+    By our new CMT, Theorem \ref{cmt-d} for statements about convergence in distribution:
+    \begin{align*}
+        g(Z_n) &\xrightarrow{d} g(Z) \\ 
+        &= Z^\top Z \\
+        &= \begin{pmatrix}
+            z_1 & z_2 & ... & z_d
+        \end{pmatrix}
+         \begin{pmatrix}
+            z_1 \\
+            z_2 \\
+            \vdots \\
+            z_d
+        \end{pmatrix} \\
+        &= \sum^d_{i=1} z_i^2 \sim \chi^2(d)
+    \end{align*}
+
+
+
+    \subsection*{Why not test each dimension one-by-one?}
+
+    Let's think about the size of the test. In Theorem 2 we established the test 
+    size would be equal to $\alpha$ in the limit. Now consider an alternative procedure, 
+    for each element of $\hat{\theta}$ we test the univariate hypothesis:
+    
+    \begin{align*}
+        T_n^j = \frac{\sqrt{n}|(\hat{\theta}^j - \theta^j)|}{\sqrt{\Sigma_{j,j}}}, j = 1, ..., d
+    \end{align*}
+
+    Again, for \textit{any given} test, the probability of a type-I error is $\alpha$. Recall, 
+    the Type-I error is the probability of rejecting the null hypothesis, given it's true. 
+    What is the probability that we reject \textit{at least 1} null hypothesis across 
+    our $d$-length vector, given the null is true:
+
+    \begin{align*}
+        Pr(\textit{Reject at least } 1 | H_0 \text{ is true.}) &= 1 - Pr(\textit{Reject none} | H_0 \text{ is true}) \\
+        &= 1 - Pr(\textit{Reject hypothesis 1} \cap  ... \cap \textit{Reject hypothesis d} | H_0 \text{ is true.}) \\
+        &= 1 - (1 - \alpha)^d
+    \end{align*}
+
+
+    As $d$ grows large $(1 - \alpha)^d$ grows very small as $1 - \alpha < 1$. This means
+    $1 - (1 - \alpha)^d \rightarrow 1$ as $d$ gets bigger - we're guaranteed to 
+    reject at least one null hypothesis in the limit as $d$ grows!
+
+
+    However, the test we contructed at this beginning of the note will correctly 
+    control the type-I error as $d$ grows\footnote{Provided $n$ grows sufficiently 
+    quickly compared to $d$, but we'll skip those details here.}
+
+
+
+
+    \subsection*{An Application to Randomised Control Trials}
+
+
+    In randomised experiments it's common to compute the mean of several 
+    characteristics of a sample across treatment and control groups.  Since we've
+    randomised individuals into treatment and control in expectation covariates 
+    should be distributed similarly across groups. Whilst this only holds in 
+    expectation, for some reason economists like reporting balance tables which 
+    check that \textit{realisations} are balanced i.e. are covariate means the same 
+    in treatment and control?
+
+
+    We can do this with the tools we've built above. Suppose we observe two 
+    covariates, $\textit{age}_i$ and an indicator if the participant is $\textit{black}_i$.
+    We'd like to test the joint hypothesis that:
+
+    \begin{align*}
+        E[age | D = 1] &= E[age | D = 0] \text{ and }\\
+        E[black | D = 1] &= E[black | D = 0]
+    \end{align*}
+    
+    % %%%%%%%%%%%%%%%%%%%%%%
+    % We can leverage large sample theory to show that $T_n$ is asymptotically $\chi^2$ distributed with $d$ degrees of freedom.
+    
+    % \begin{corollary}\label{sl_5:cor_chi2}
+    %  Let  $\hat{\theta}_n$ be an estimator for $\theta \in \mathbbm{R}^d$ such that \eqref{sl_5:eq_normallimmutlivar} holds. Then for $T_n$ defined by  \eqref{sl_5:eq_tnmultivar}, it hold that \begin{align}
+    %         T_n \overset{d}{\to} \chi^2(d).
+    %     \end{align}
+    % \end{corollary}
+    
+    % \begin{proof}
+    % \vspace{7em}
+    % \end{proof}
+    
+    % \vfill
+    
+    % %%%%%%%%%%%%%%%%%%%%%%
+    
+    
+    % \begin{proof}
+    % \vspace{7em}
+    % \end{proof}
+    
+    % \vfill
+    
+\end{document}

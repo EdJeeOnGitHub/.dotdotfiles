@@ -1,0 +1,122 @@
+\documentclass{article}
+
+\usepackage[margin=0.5in]{geometry}
+\usepackage{bm}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ }
+ \usepackage{fancyhdr}
+
+ \pagestyle{fancy}
+ \fancyhf{}
+ \rhead{Overleaf}
+ \lhead{Guides and tutorials}
+% \title{Adaptive Trials and Preferences}
+\author{Edward Jee}
+\begin{document}
+% \maketitle
+
+
+
+
+Traditionally, adaptive trials focus on a single outcome of concern and attempt to maximise 
+$S_t = \sum^t_{0}Y_t$ by varying treatment arm proportions as new data arrives - for example, Caria et al (2021), maximise the 
+six-week follow-up employment rate of job seekers in Jordan. However, in 
+practice economists and policymakers often observe data on multiple outcomes and must 
+choose between distinct outcomes or a timeframe with which to measure outcomes.
+    
+Taking this decision seriously 
+implies the utility function of participants only depends on one outcome or good 
+and this particular good is known to the economist. Furthermore, this makes it 
+easy to mistake the loss or welfare function of the economist for the trial 
+participants - ideally we'd like to elicit the preferences of in-sample participants 
+and use this welfare function to inform treatment assignment. 
+
+
+My goal is  to elicit preferences, characterised by the 
+random utility model (RUM), whilst adaptively assigning subjects 
+to treatment arms. By jointly modelling uncertainty over marginal rates of substitution 
+across goods and treatment effect uncertainty we choose the each arm in proportion 
+to which we believe it's optimal.
+
+\subsection*{The "Traditional" Bandit}
+
+
+Traditional Thompson sampling involves:
+
+
+    \begin{itemize}
+        \item Generate a prior over each arm's rewards.
+        \item Take a random draw from this prior distribution and choose the best action given your draw.
+        \item Observe the reward associated with your action.
+        \item Update your posterior over arm rewards.
+        \item Today's posterior is tomorrow's prior $\rightarrow$ return to step two.
+    \end{itemize}
+
+
+However, with multiple goods we observe a  vector  $Y_t = \begin{bmatrix} y^1_t & y^2_t & ... & y^j_t\end{bmatrix}$.
+Now, each treatment arm $k$ has expected reward vector $\bm{\mu}_k = \begin{bmatrix}
+    \mu^1_k & \mu^2_k & ... & \mu^j_k
+\end{bmatrix}'$. We now need to find some function $f(Y_t)$ to maximise. 
+
+\subsection*{The "Utility" Bandit}
+
+Let $U_k = V_k + \varepsilon_k$ be the utility a 
+participant receives from \textit{choosing} treatment arm $k$. Assume $V_k = 
+\gamma_1 \mu^1_k + \gamma_2 \mu^2_k + ... + \gamma_J \mu^J_k = \bm{\mu}_k\bm{\gamma}'$. Our ideal experiment would be to vary the perceived effectiveness of each treatment arm $k$ for 
+outcome $j$ and let variation in treatment effectiveness map out individuals' 
+indifference curves over outcomes. Fortunately, the Thompson sampling posterior 
+provides us with exactly such variation.
+
+
+In the language of IO, each treatment arm is a good and its expected effect on outcomes 
+is the good's characteristic. In the "welfare sample" we estimate a discrete choice model 
+and in the "treatment arm" we estimate a conventional regression model. The estimated treatment effects in the treatment sample 
+become the $X$s in the welfare estimation sample.
+
+Therefore each period we:
+
+    \begin{itemize}
+        \item Draw $\bm{\mu}_{k, i}$ from the posterior for each individual in the "welfare" arm. 
+        \item Report a $\bm{\mu}_{k, i}$ to each individual and observe their choices.
+        \item Regress their choices on $\bm{\mu}_{k,i}$ and update posterior over $\gamma$.
+        \item Sample from joint posterior and draw $\bm{\mu}_{k}, \gamma$
+        \item Choose treatment proportions for the treatment sample according to probability  $\bm{\mu}_k \gamma'$ is 
+        greater than $\bm{\mu}_l \gamma', l \neq k$.
+        \item Observe rewards across arms and update $\bm{\mu}_k$ posterior.
+        \item Return to step 1.
+         \end{itemize}
+
+
+We weight each arm's benefits using the estimated $\bm{\gamma}$ and 
+assign participants in the treatment sample to each treatment arm in proportion to its probability of being optimal \textit{
+    accounting for posterior beliefs about marginal rates of substitution and 
+    posterior beliefs about each treatment arm's expected reward
+}. Figure \ref{fig:mab} shows the utility bandit in action.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=.65]{mab-mrs-ot.png} 
+    \label{fig:mab}
+    \caption{An "Easy" Example.
+     Arm Proportions shown in upper panel. Estimated MRS in lower panel.}
+    
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=.65]{hard-mab-example.png} 
+    \label{fig:mab}
+    \caption{A "Tricky" Example.
+     Arm Proportions shown in upper panel. Estimated MRS in lower panel.}
+\end{figure}
+
+
+
+\end{document}

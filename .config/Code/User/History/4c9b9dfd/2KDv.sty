@@ -1,0 +1,97 @@
+\usepackage{pxfonts}
+\usepackage{bbm}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{todonotes}
+\usepackage{tikz}
+
+% \usetheme{Boadilla}
+% \usefonttheme{serif}
+% \usefonttheme{professionalfonts}
+% \usefonttheme{structurebold}
+% \usecolortheme{spruce}
+% \useinnertheme{rectangles}
+% \setbeamercolor{itemize item}{fg=black}
+% \setbeamercolor{itemize subitem}{fg=black}
+% \setbeamertemplate{enumerate items}[default]
+% \setbeamercolor{enumerate item}{fg=black}
+% \setbeamertemplate{blocks}[rounded][shadow]
+% \setbeamercolor{block body}{bg=lightgray!30}
+
+\newcommand{\prob}{\operatorname{P}\probarg}
+\newcommand{\expect}{\operatorname{E}\probarg}
+\newcommand{\fsexpect}{\operatorname{\hat{E}}\probarg}
+\DeclarePairedDelimiterX{\probarg}[1]{[}{]}{%
+  \ifnum\currentgrouptype=16 \else\begingroup\fi
+  \activatebar#1
+  \ifnum\currentgrouptype=16 \else\endgroup\fi
+}
+
+\newcommand{\innermid}{\nonscript\;\delimsize\vert\nonscript\;}
+\newcommand{\activatebar}{%
+  \begingroup\lccode`\~=`\|
+  \lowercase{\endgroup\let~}\innermid 
+  \mathcode`|=\string"8000
+}
+
+\newtheorem{assumption}{Assumption}
+
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,petri,calc,shapes.geometric}
+
+\tikzset{
+  >=stealth',
+  county/.style={
+    ellipse,
+    draw=black, very thick,
+    fill=white,
+    text width=8.5em,
+    minimum height=2em,
+    text centered},
+  punkt/.style={
+    rectangle,
+    rounded corners,
+    draw=black, very thick,
+    fill=white,
+    text width=8.5em,
+    minimum height=2em,
+    text centered},
+  expgroup/.style 2 args={
+    rectangle,
+    rounded corners, 
+    draw=black!50, dashed,
+    fill=black!10,
+    fit=(#1) (#2)},
+  pil/.style={
+    <-,
+    thick,
+    shorten <=2pt,
+    shorten >=2pt},
+  greypil/.style={
+    <-,
+    draw=black, dotted,
+    shorten <=2pt,
+    shorten >=2pt},
+  triangle/.style={
+    regular polygon,
+    draw=black, very thick,
+    fill=white,
+    regular polygon sides=3
+  },
+  popcircle/.style={
+    circle,
+    fill=white,
+    draw=black, very thick
+  },
+  invisible/.style={opacity=0, prefix after command={\pgfextra{\tikzset{every label/.style={opacity=0}}}}},
+  visible on/.style={alt={#1{}{invisible}}},
+  alt/.code args={<#1>#2#3}{%
+    \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}} % \pgfkeysalso doesn't change the path
+  },
+}
+
+
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}

@@ -1,0 +1,42 @@
+{
+	"extensions": [
+		"eamodio.gitlens",
+		"GrapeCity.gc-excelviewer",
+		"Ikuyadeu.r",
+		"RDebugger.r-debugger",
+		"REditorSupport.r-lsp",
+		"ms-vscode-remote.remote-containers"
+	],
+	"forwardPorts": [
+		26784,
+		29656,
+		31708,
+		11823,
+		19234,
+		29533,
+		26566,
+		19525,
+		43303,
+		10800,
+		35205,
+		35097,
+		18686,
+		37321,
+		37157,
+		41325,
+		32795,
+		35271,
+		30484,
+		42981,
+		33135,
+		20310,
+		33947,
+		20103,
+		17295,
+		46217,
+		20567,
+		39805
+	],
+	"workspaceFolder": "/home/rstudio",
+	"remoteUser": "rstudio"
+}

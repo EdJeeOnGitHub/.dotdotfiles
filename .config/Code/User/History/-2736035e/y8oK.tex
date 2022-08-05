@@ -1,0 +1,366 @@
+\documentclass[twoside,11pt]{article}
+
+% Any additional packages needed should be included after jmlr2e.
+% Note that jmlr2e.sty includes epsfig, amssymb, natbib and graphicx,
+% and defines many common macros, such as 'proof' and 'example'.
+%
+% It also sets the bibliographystyle to plainnat; for more information on
+% natbib citation styles, see the natbib documentation, a copy of which
+% is archived at http://www.jmlr.org/format/natbib.pdf
+
+\usepackage{jmlr2e}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+% Definitions of handy macros can go here
+
+\newcommand{\dataset}{{\cal D}}
+\newcommand{\fracpartial}[2]{\frac{\partial #1}{\partial  #2}}
+
+% Heading arguments are {volume}{year}{pages}{submitted}{published}{author-full-names}
+
+\jmlrheading{1}{}{}{}{}{}
+
+% Short headings should be running head and authors last names
+
+%\ShortHeadings{Learning with Mixtures of Trees}{Meil\u{a} and Jordan}
+\firstpageno{1}
+
+\begin{document}
+
+\title{
+  Treatment and Welfare Learning for Policymakers
+}
+
+\author{\name Edward Jee \email edjee@uchicago.edu \\
+       \addr Kenneth C. Griffin Department of Economics\\
+       University of Chicago\\
+       Chicago, IL 60637, USA}
+
+
+\maketitle
+
+\begin{abstract}%   <- trailing '%' for backward compatibility of .sty file
+I describe a modified Thompson sampling algorithm that jointly learns participant preferences and treatment 
+effects to estimate the welfare optimal treatment arm in an adaptive field 
+experiment. In contrast to \cite{lin2022preference}, I design an incentive 
+compatible mechanism to reveal \emph{participant} preferences and not those of 
+the decision maker, even in the presence of strategic behaviour by participants 
+or scepticism of information 
+provision as is common in development economics. Finally, by randomising 
+participants into their preferred choice or alternative choices I can directly 
+decompose the average treatment effect (ATE) vectors into an average treatment 
+effect on the treated (ATT) and average treatment effect on the untreated (ATU); 
+aggregate these treatment effects into scalar welfare measures; and demonstrate 
+the importance of selection when policymakers design interventions.
+\end{abstract}
+
+\begin{keywords}
+ Multi-Objective Decision Making, Participant Preferences, Incentive Compatibility, 
+ Development Economics, Programme Evaluation, Causal Inference 
+\end{keywords}
+
+\section{Introduction}
+
+Field experiments in development economics often observe multiple, common outcomes 
+across treatment arms and must identify an optimal arm for a policymaker. 
+ When using adaptive trials economists typically maximise a single outcome or 
+ some standardised index. Taking such a decision seriously 
+implies the economist's imposed utility function reflects participants' preferences 
+and these preferences only depend on one feature of the outcome vector. Alternatively, 
+using a standardised index implies 
+participants value the marginal value of a variance weighted good equally across 
+outcomes\footnote{For a static example see \cite{ashraf2010a,blattman2017a,bandiera2017a}}. Instead, I propose an algorithm that jointly learns participant 
+preferences and treatment arm effectiveness whilst also identifying exactly the 
+policy parameters of interest - an average treatment effect (ATE) vector, which 
+can further be decomposed into an average treatment effect on the treated (ATT) and 
+an average treatment effect on the untreated (ATU) and finally, the necessary marginal 
+rates of substitution to 
+aggregate vector valued treatment effects into scalar units of  welfare. 
+
+
+My results are most similar to CITE \citep{lin2022preference}, the latter seeks 
+to learn a decision maker's utility function using pairwise comparisons when a 
+time-consuming or expensive experiment must be run to learn 
+vector valued outcomes. My setting differs in two key ways: First, it is the 
+participants' preferences we wish to learn and not the experimenter's. Second, 
+instead of simply identifying the ATE, my proposed algorithm identifies both 
+the ATT and the ATU. These parameters are often more relevant to the policymaker's 
+decision to implement the programme considered.
+
+
+Moving from decision maker's preferences to participants' introduces several 
+complications. A rich literature in economics, pyschology, and experimental fields 
+more generally demonstrate 
+the importance of designing mechanisms such that participants are incentivised 
+to reveal their true preferences CITE. When the decision maker and experimenter are 
+one and the same, 
+incentives are clearly aligned and stated preferences can be treated as the ground 
+truth. However, when the experimenter must learn the decision maker's 
+preferences he/she must account for the possibility of strategic behaviour and 
+"cheap talk". For instance, participants may misreport their preferences in a bid
+to increase their expected payoff in response to other participants' choices, or 
+social desirability bias may lead to participants stating preferences to match 
+the experimenter's expectations or social norms CITE. Therefore, my work 
+differs from \cite{lin2022preference} and methods outlined by CITE by proposing 
+an incentive compatible 
+preference elicitation step for participants by allowing individuals
+to rank treatment arms and assign subjects to arms with a probability
+concordant with their stated preferences. In some sense, my approach "disciplines"
+participants by ensuring stated preferences have consequences.
+
+
+Furthermore, whilst \cite{lin2022preference} treat output vectors from the surrogate 
+model as given and elicit preferences across these vectors, development economists 
+face an environment where information signals are treated with 
+scepticism and both treatment \textit{and} preference experimentation/elicitation
+ in the field is costly. Therefore, I propose a second algorithm with a ``structural" 
+ model of belief formation that maps posterior signals, which can be imparted by 
+ the experimenter cheaply in the field, to participant posterior beliefs.
+
+% Furthermore, whilst \cite{lin2022preference} treat output vectors from the surrogate 
+% model as given and elicit preferences across these vectors, development economists 
+% face a more challenging environment where information signals are treated with 
+% scepticism \citep{conlon-schilbach,mobius-sc}. Furthermore, psychologists and behavioural economists have shown a 
+% variety of behavioural biases exist that must be considered when mapping information 
+% signals to posterior beliefs such as inattention \citep{sparse-ration,GABAIX2019261}, learning through noticing \citep{learning-noticing}, 
+% and conservatism bias \citep{BENJAMIN201969}. Therefore, I show how to elicit posterior beliefs in more challenging 
+% environment likely to be faced in the field by experimenters and microfound 
+% choices using the random utility model (RUM) of \cite{mcfadden}.
+
+Finally, this paper seeks to further embed the principles of the Belmont report, 
+published in 1979 after numerous human subject research violations, in randomised 
+control trials run by development economists and other researchers. By enshrining 
+participant preferences at the center of randomised trials, my proposed algorithm 
+speaks directly to respect for persons; beneficence; and justice as outlined by 
+the report. Respect for participants and their preferences, who in development 
+economics often reside in low-income countries, is particularly important in 
+a field dominated by rich, US-based academics CITE running trials on those with 
+little agency, income, or human capital.
+
+\section{Setup and Method}
+
+In this section, I will briefly describe two algorithms. The first assumes a benign 
+enviroment without budget constraints and elicits posteriors directly. The second focuses on a more 
+realistic field environment often faced by development economists in low-income
+countries where information can be costly to obtain.
+
+The experimenter faces a vector of outcomes $Y_{i} = \begin{bmatrix}
+    y^1_{i} & y^2_{i} & ... & y^j_{i}
+\end{bmatrix}'$, $Y_i \in \mathbb{R}^j$ for individual $i$ and must determine 
+the optimal treatment 
+arm $k$ with associated reward vector $\bm{\mu}_k = \begin{bmatrix}
+    \mu^1_k & \mu^2_k & ... & \mu^j_k
+\end{bmatrix}', \bm{\mu}_k \in \mathbb{R}^j$, individuals arrive in waves of size
+$N_t$. Individuals have knowledge about each treatment arm's 
+expected effectiveness on their own outcomes. Participant's
+ utility functions are parametrised using \cite{mcfadden}'s discrete 
+choice random utility model\footnote{Any non/semi/fully-parametric choice model could be used here 
+but economists are particularly partial to the multinomial/rank-ordered logit.}: $U_k = V_k + \varepsilon_k$ 
+where $U_k$  corresponds to the utility an individual receives from \emph{choosing} treatment arm $k$ 
+with $V_k = \gamma_1 \mu_k^1 + \gamma_2 \mu_k^2 + ... + \gamma_j \mu_k^j = \bm{\mu}_k \bm{\gamma}'$. 
+Therefore, a participant, if offered 
+the choice of treatment arms, will only choose arm $l$ if $\varepsilon_n < (V_l - 
+V_n) + \varepsilon_l, \forall n \neq l$ where $\varepsilon_k \sim T1EV$. Note that 
+$\gamma_j$ isn't indexed by $k$ - individuals must value a marginal gain in 
+outcome $j$ the same in arm $k$ as arm $l \neq k$.
+
+
+\begin{algorithm}
+  \caption{Treatment and participant preference estimation }\label{alg:cap}
+  \begin{algorithmic}
+  \State Generate a prior $(Q_0, F_0)$ over $\left(\bm{\mu}_k, \bm{\gamma}\right)$
+  \For{$t = 1,...,T$}
+  % \State Sample $\bm{\nu}_{t} \sim Q_{t-1}(\cdot | p_{k}^{t-1}, Y^{t-1})$ and inform each 
+  % participant of a single $\mu_k(\nu_{t})$ draw
+  \State Elicit participant posterior beliefs $\bm{\mu}_k$ using a binarized scoring rule
+  \State Observe participant rankings, $K_t$ and update $F_{t}( \cdot | K^{t}, \bm{\mu}_k(\bm{\nu}^{t}))$ 
+  \State Sample $\bm{\omega}_{t} \sim F_{t}( \cdot | K^{t}, \bm{\mu}_k(\bm{\nu}^{t})), \bm{\nu}_t \sim Q_{t-1}(\cdot | p_{k}^{t-1}, Y^{t-1})$ 
+  \State Choose $p_k = \frac{1}{N_t} 
+  \sum^{N_t}_{n=1} \mathbb{I}\{\bm{\mu}_k(\nu_{t}) \bm{\gamma}(\omega_{t})' > \bm{\mu}_l(\nu_{t}) \bm{\gamma}(\omega_{t})'\}, k \neq l$ 
+  \State Assign participants to treatment arm $k$ with probability $p_{k}$ using a strategy proof mechanism 
+  \State Observe $Y_t$ and update the posterior $Q_{t}(\cdot | p_k^{t-1}, Y^{t})$ over $\bm{\mu}_k$. 
+  \EndFor
+  \end{algorithmic}
+  \end{algorithm}
+
+Each wave the experimenter elicits participant posterior beliefs about treatment 
+arm effects using a \textit{binarized scoring rule} (BSR) CITE. Under a BSR the participant 
+receives a fixed reward when their prediction error is less than some independently 
+generated random number. Since the reward size is fixed the individual is 
+incentivised to report her true beliefs even under a range of risk preferences - only the 
+probability of reward is determined by the realised score and not its size. CITE 
+show that even if a particpant's decision cannot be rationalised by expected 
+utility theory, provided participant preferences satisfy a monotonicity condition 
+the BSR will be incentive compatible and she will report her true beliefs.
+
+Next, the experimenter instructs participants to rank their preferred treatment 
+arms. Again, incentive compatibility is ensured by using a strategy proof mechanism
+with probability of arm assignment increasing in participant rankings. One example 
+would be the \textit{random serial dictatorship} mechanism whereby participants 
+are randomly ordered from 1 to $N_t$, assign the first participant their first choice,
+the next participant their top choice amongst the remaining choices, and so on. 
+Each treatment arm accepts remaining participants until their assignment proportion, 
+$p_k$\footnote{I describe $p_k$'s calculation shortly. $p_k$ doesn't need to be known 
+before eliciting rankings, only when treatment is assigned.}, is reached. Random 
+serial dictatorship is a commonly used school choice algorithm, partly because of 
+its strategy proofness CITE.  With rankings 
+and participant posteriors in hand the experimenter estimates a rank-ordered logit, 
+updating $F_t$, 
+where the probability of a given ranking takes the familiar functional form:
+
+\begin{align*}
+  Pr(r_i | \bm{\gamma}) &= \prod^{K-1}_{k=1} \frac{\exp(V_{ir_{ik}})}{\sum^K_{l=k}\exp(V_{ir_{il}})}
+\end{align*}
+
+
+To calculate assignment probabilities the experimenter draws from the treatment
+effect, $Q_{t-1}$, and discrete choice model posterior, $F_t$, to generate $\bm{\mu}_k(\nu_t), \bm{\gamma}(\omega_t)$ 
+draws. Taking the linear combination of these draws, 
+$\bm{\mu}_k(\nu_{t}) \bm{\gamma}(\omega_{t})'$, gives posterior arm welfare and 
+$p_k$ is chosen using probability matching in proportion to the probability an 
+arm's welfare is highest. Finally, the experimenter assigns participants to 
+treatment arms, observes $Y_t$ and updates their treatment effect posterior, $Q_t$.
+
+\subsection{Algorithm 2}
+In many settings eliciting posteriors directly is uneconomical. Enumerators must 
+be trained in the application of BSR and administer the test in the field for 
+each subject. In contrast, information treatments are cheap and easy to administer 
+via text CITE. Therefore, I propose an alternative algorithm that uses signals, 
+in the form of treatment effect posterior draws, 
+and a structural model of belief formation to estimate marginal rates of 
+substitution across outcomes.
+
+\begin{algorithm}
+  \caption{Treatment and structural participant preference estimation }\label{alg:cap}
+  \begin{algorithmic}
+  \State Generate a prior $(Q_0, F_0, \Pi_0)$ over $\left(\bm{\mu}_k, \bm{\gamma}, (\bm{\mu}_0, \bm{\tau}_0^{-1})\right)$
+  \For{$t = 1,...,T$}
+  \If{$e_i < \alpha_t, e_i \sim U(0,1)$}
+  \State Elicit participant priors, $\bm{\mu}_0, \bm{\tau}_0^{-1}$, using BRS and update $\Pi_t$
+  \EndIf
+  \State Sample $\bm{\nu}_{t} \sim Q_{t-1}(\cdot | p_{k}^{t-1}, Y^{t-1})$ and inform each 
+  participant of a single $\mu_k(\nu_{t})$ draw
+  \State Observe participant rankings, $K_t$, and update $F_{t}( \cdot | K^{t}, \bm{\mu}_k(\bm{\nu}^{t}))$ 
+  given $\Pi_t$
+  \State Sample $\bm{\omega}_{t} \sim F_{t}( \cdot | K^{t}, \bm{\mu}_k(\bm{\nu}^{t})), \bm{\nu}_t \sim Q_{t-1}(\cdot | p_{k}^{t-1}, Y^{t-1}), \bm{u} \sim U(0,1)$ 
+  \State Choose $p_k = \frac{1}{N_t} 
+  \sum^{N_t}_{n=1} \mathbb{I}\{\bm{\mu}_k(\nu_{t}) \bm{\gamma}(\omega_{t})' > \bm{\mu}_l(\nu_{t}) \bm{\gamma}(\omega_{t})'\}, k \neq l$ 
+  \State Assign participants to treatment arm $k$ with probability $p_{k}$ using a strategy proof mechanism
+  \State Observe $Y_t$ and update the posterior $Q_{t}(\cdot | p_k^{t-1}, Y^{t})$ over $\bm{\mu}_k$. 
+  \EndFor
+  \end{algorithmic}
+  \end{algorithm}
+
+In Algorithm 2 the experimenter chooses a subsample to elicit participants'
+ priors over treatment arm 
+effectiveness\footnote{Economists typically ask individuals to allocate beans or 
+stones in intervals to generate belief distributions e.g. see \cite{ar-delavande} for more details.}
+and samples $N_t$ draws, \emph{or signals,} from the joint posterior of treatment arm effects. 
+Next, the experimenter individually informs participants of a private signal
+and asks the individual to rank his/her preferred treatment arms. Estimating a 
+rank-ordered discrete choice model of rankings on signals and normalising 
+estimated coefficients by the first signal coefficient gives the marginal  
+rate of substitution \emph{across signals about outcomes}. Unfortunately, this 
+complicates identification somewhat as we must disentangle how much an individual 
+values an additional unit of an outcome from how sceptical they are about 
+outcome signals. In the interest of brevity I will focus on a conjugate Gaussian 
+updating model with known variance: 
+
+
+\begin{align*}
+    S^i  | \mu^i  &\sim N\left(\mu^i, \tau^{i,-1}\right) \\
+    \mu^i &\sim N\left(\mu^i_0, \tau_0^{i,-1}\right) \\
+    \implies E[\mu'^{i} | s^{i} ]   &= \mu^i_0 + (s^i - \mu^i_0) \frac{\tau^i}{\tau^i_0 + \tau^i}, 
+    \\ i &= 1, ..., j 
+\end{align*}
+   
+That is, on receiving a signal $s$ for outcome $i$ the participant updates their
+ posterior in proportion to their prior precision and precision of the signal. 
+ Defining $\lambda^i = \frac{\tau^i_0}{\tau^i}$ gives:
+ \begin{align*}
+   \frac{ds^i}{ds^l} &= \frac{\lambda^i + 1}{\lambda^l + 1} \frac{d\mu^i}{d\mu^l}
+ \end{align*}
+
+and estimated participant prior precision and marginal rates of substitution 
+across signals can be mapped into marginal rates of substitution across outcomes.
+
+
+Again, the experimenter can now sample from 
+the joint posterior over treatment effects and marginal rates of substitution, 
+construct each arm's posterior welfare, and assign treatment using probability 
+matching in proportion to estimated posterior welfare.
+
+\subsection{Policy Relevant Parameters}
+
+Finally, the estimated parameter vector $\bm{\mu}_k$ forms an ATE, typically 
+written as $E[Y(1) - Y(0)]$ using the Fisher-Neyman-Rubin-Quandt model. The 
+ATE describes a policy counterfactual if random individuals were \textit{compelled}
+to take or not take treatment, $D$. In reality, policymakers typically cannot 
+mandate treatment in a population and must consider whether to expand or 
+withdraw a programme based on the effects for those who choose, or don't choose, 
+to takeup the offered treatment CITE.
+
+The parameters of interest in this case corresponds to an ATT $E[Y(1) - Y(0) | D = k]$, 
+and ATU, $E[Y(1) - Y(0) | D = k'], k \neq k'$. By eliciting preference rankings 
+but randomly assigning individuals to treatment arms I can compare outcomes 
+for those that received their favoured choice and those that don't and subsequently 
+uncover the ATT and ATU.
+
+
+
+ 
+\section*{Simulation Results and Discussion}
+
+
+Table 1 shows results from 100 Monte Carlo draws using 15 rounds of 100 
+participants per wave with four treatment arms and three outcomes to 
+aggregate across. Simulation parameters are drawn from:
+\begin{align*}
+  \bm{\gamma} &\sim N(\bm{0}, I_3) \\
+  \bm{\mu}_k &\sim N(\bm{0}, I_3), \ k = 1, ..., 4 \\
+  \eta_i &\sim N(0, 1),\ \varepsilon_{ki} \sim T1EV
+\end{align*}
+
+where $\eta_i, \varepsilon_{ki}$ represent participant-level outcome and 
+ranking errors respectively. Models are estimated in Stan CITE.
+\input{final-sim.tex}
+Assignment type ``Estimated'' corresponds to Algorithm 1 outlined above and 
+identifies the optimal arm by the end of the trial 95\% of the time. In contrast, 
+static random assignment only identifes the optimal arm in 87\% of draws. ``Equal''
+corresponds to Thompson sampling maximising a standardised index of the three 
+outcomes whilst ``First'' only targets the first element of the outcome vector to 
+maximise. Since I use a closed form solution for participant utility, using the 
+multinomial logit and generated $\bm{\gamma}$ parameters, I calculate average 
+welfare across participants within a simulated draw and rank each algorithm, 
+denoted by ``Mean Welfare Rank''. As expected, Algorithm 1, which estimates 
+participant preferences directly produces the greatest mean welfare for participants 
+whilst static random assignment the lowest.
+
+In conclusion, by carefulling incentivising research trial participants, through the 
+use of binarized scoring rules and a strategy proof mechanism such as 
+random serial dictatorship, I've shown how to estimate participant preferences
+and aggregate treatment effects across disparate outcomes into a microfounded 
+estimate of arm arm welfare. When direct posterior elicitation if infeasible or 
+prohibitively expensive, drawing signals from the Thompson posterior over treatment 
+effects is almost exactly the information we wish to impart to participants 
+to generate observale variation in choices.
+% Acknowledgements should go at the end, before appendices and references
+
+% \acks{We would like to acknowledge support for this project
+% from the National Science Foundation (NSF grant IIS-9988642)
+% and the Multidisciplinary Research Program of the Department
+% of Defense (MURI N00014-00-1-0637). }
+
+% Manual newpage inserted to improve layout of sample file - not
+% needed in general before appendices/bibliography.
+
+\newpage
+
+
+\vskip 0.2in
+\bibliography{sample,machine}
+
+\end{document}

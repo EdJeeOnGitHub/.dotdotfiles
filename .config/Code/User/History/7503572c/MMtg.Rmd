@@ -1,0 +1,34 @@
+---
+title: ZM Plots
+output: pdf_document
+---
+
+
+
+
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+opts_chunk$set(echo = FALSE, warning = FALSE, 
+               cache = FALSE, cache.path = "zm-plots-cache/", 
+                fig.align = "center")
+# knitr::opts_knit$set(root.dir = "/home/ed/projects/sind-mcct-vaccination")       
+```
+
+
+## Histograms 
+
+```{r histograms}
+
+include_graphics(
+    "../data/output/plots/fake-town-calendar-measles1-plot.png")
+
+```
+
+
+
+```{r initial-plots}
+
+include_graphics(
+    "../data/output/plots/fake-town-calendar-measles1-plot.png")
+```

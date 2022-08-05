@@ -1,0 +1,63 @@
+\documentclass{article}
+\usepackage{takeup_beamer_header}
+\begin{document}
+    
+
+\section*{Ed likelihood derivations}
+
+With county and cluster effects, $\alpha_l, \delta_c$:
+\begin{align*}
+  D_{lc} &= \alpha_l + \delta_c + \pi_{glc} + U_D, \ U_D \sim N(0, \eta_g) \\
+  Pr(D < d \ |\  D > 0 ) &= Pr(\alpha_c + \delta_c + \pi_{glc} + U_D < d \ | \ 
+  \alpha_c + \delta_c + \pi_{glc} + U_D > 0) \\
+   &= Pr( U_D < d -  \underbrace{(\alpha_c + \delta_c + \pi_{glc})}_{\mu_D}\   |\  
+    U_D > - \underbrace{(\alpha_c + \delta_c + \pi_{glc})}_{\mu_D}) \\ 
+   &= Pr\left( \frac{U_D}{\eta_g} <  \frac{d - \mu_D}{\eta_g} \   |\  
+    \frac{U_D}{\eta_g} > - \frac{\mu_D}{\eta_g}\right) \\  
+    &= Pr(Z < \frac{d - \mu_D}{\eta_g} \ |\  Z > -\frac{\mu_D}{\eta_g} ) \\
+    &= \frac{
+      \Phi\left( \frac{d - \mu_D}{\eta_g}\right) - \Phi\left(
+        -\frac{\mu_D}{\eta_g}
+      \right)
+    }{1 - \Phi\left(-\frac{\mu_D}{\eta_g}\right)}
+\end{align*}
+
+Taking derivatives to get the pdf:
+
+\begin{align*}
+  \phi^*(d; \theta) &= \frac{
+    \frac{1}{\eta_g}\phi\left(\frac{d - \mu_D}{\eta_g}\right)
+  }{1 - \Phi\left(-\frac{\mu_D}{\eta_g}\right)} \\ 
+   &= \frac{
+    \frac{1}{\eta_g}\phi\left(\frac{d - \mu_D}{\eta_g}\right)
+  }{\Phi\left(\frac{\mu_D}{\eta_g}\right)} \\ 
+\end{align*}
+
+
+Taking logs:
+
+\begin{align*}
+  \log \phi^*(d;\theta) &= \log \phi\left(\frac{d - \mu_D}{\eta_g}\right) - 
+  \log(\eta_g) - \log \Phi\left(\frac{\mu_D}{\eta_}\right)
+\end{align*}
+
+
+
+ Casual model function 
+ \begin{equation*}  
+   d \leftarrow f_D(g; m, \boldsymbol{\pi}, u_D) = \pi_{gm} + u_D 
+ \end{equation*} 
+
+
+ Finite-mixture statistical model ($M = 2$) 
+ \begin{align*} 
+ \prob{D(g) = d} = \prob{D = g | G = g} = \sum_m^M \lambda_m \frac{\phi\left(\frac{d - \pi_{gm}}{\eta_{gm}}\right)}{1 - \Phi\left(\frac{d - \pi_{gm}}{\eta_{gm}}\right)}  
+ \end{align*} 
+ and 
+ \begin{align*} 
+   \boldsymbol{\rho} &\sim \mathtt{Dirichlet}(\boldsymbol{\iota}_M) \\ 
+   \pi_{gm} &\sim \mathtt{Normal^+}(0, 1) \\ 
+   \eta_{gm} &\sim \mathtt{Normal^+}(0, 1). 
+ \end{align*} 
+\end{document}
+

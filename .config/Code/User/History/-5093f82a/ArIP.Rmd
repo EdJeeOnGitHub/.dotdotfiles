@@ -1,0 +1,466 @@
+---
+title: HH Survey Simulations 
+output: pdf_document
+---
+
+
+
+
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+library(broom)
+library(furrr)
+opts_chunk$set(echo = FALSE, warning = FALSE, 
+               cache = FALSE, 
+               fig.align = "center")
+
+rural_df = read_csv("../../data/output/hh-survey/clean_rural_data.csv")
+urban_df = read_csv("../../data/output/hh-survey/clean_urban_data.csv")
+
+karachi_east_df = urban_df %>%
+    filter(district == "KARACHI EAST DISTRICT") 
+
+kambar_df = rural_df %>%
+    filter(str_detect(district, "KAMBAR")) %>%
+    filter(!(is.na(pop) | is.na(lit))) # two observations
+```
+
+## Kambar
+Rural Kambar Data Structure:
+```{r}
+kambar_df %>%
+    mutate(taluka_id = paste0("taluka_", taluka_id)) %>%
+    group_by(taluka_id) %>%
+    summarise(
+        N_stc_per_taluka = n_distinct(stc_id),
+        N_tc_per_taluka = n_distinct(tc_id), 
+        total_pop_per_taluka = sum(pop), 
+        mean_pop_per_village = mean(pop))
+```
+
+Urban Kambar Data Structure
+```{r}
+urban_df %>%
+    filter(str_detect(district, "KAMBAR")) %>%
+    mutate(subdivision_id = paste0("subdiv_", subdivision_id)) %>%
+    group_by(subdivision_id) %>%
+    summarise(
+        N_charges_per_subdiv = n_distinct(charge_id), 
+        N_circles_per_charge = n_distinct(circle_id), 
+        total_pop_per_subdivision = sum(pop), 
+        mean_pop_per_circle = mean(pop))
+
+```
+
+
+```{r}
+kambar_df %>%
+    ggplot(aes( 
+        x = pop, 
+        fill = factor(taluka_id)
+    )) +
+    geom_histogram(
+        colour = "black"
+    ) +
+    facet_wrap(~taluka_id) +
+    scale_x_log10() +
+    theme_bw() +
+    theme(legend.position = "bottom") +
+    labs( 
+        title = "Village Population by Taluka, Rural Kambar", 
+        fill = "Taluka", 
+        x = "Village Population"
+    ) 
+```
+
+
+## Karachi EAST
+
+Urban Karachi East data structure
+```{r}
+
+karachi_east_df %>%
+    mutate(subdivision_id = paste0("subdiv_", subdivision_id)) %>%
+    group_by(subdivision_id) %>%
+    summarise(
+        N_charges_per_subdiv = n_distinct(charge_id), 
+        N_circles_per_charge = n_distinct(circle_id), 
+        total_pop_per_subdivision = sum(pop), 
+        mean_pop_per_circle = mean(pop))
+```
+
+
+
+```{r}
+
+karachi_east_df %>%
+    ggplot(aes( 
+        x = pop, 
+        fill = factor(subdivision_id)
+    )) +
+    geom_histogram(colour = "black") +
+    facet_wrap(~subdivision_id) +
+    theme_bw() +
+    scale_x_log10() +
+    theme_bw() +
+    theme(legend.position = "bottom") +
+    labs( 
+        title = "Circle Population by Subdivision, Karachi East", 
+        fill = "Subdivision", 
+        x = "Circle Population"
+    ) 
+
+
+```
+
+## Karachi West
+
+Urban
+
+```{r}
+
+urban_df %>%
+    filter(str_detect(district,  "WEST")) %>%
+    summarise( 
+        across(
+            .cols = c(subdivision_id, charge_id, circle_id), 
+            n_distinct
+        )
+    ) %>%
+    mutate(place = "Urban Karachi East")
+
+
+```
+
+
+Rural 
+```{r}
+
+rural_df %>%
+    filter(str_detect(district, "WEST")) %>%
+    mutate(taluka_id = paste0("taluka_", taluka_id)) %>%
+    group_by(taluka_id) %>%
+    summarise(
+        N_stc_per_taluka = n_distinct(stc_id),
+        N_tc_per_taluka = n_distinct(tc_id), 
+        total_pop_per_taluka = sum(pop), 
+        mean_pop_per_village = mean(pop))
+
+```
+
+
+## Sujawal
+
+Urban Sujawal
+```{r}
+urban_df %>%
+    filter(district == "SUJAWAL DISTRICT") %>%
+    summarise( 
+        across(
+            .cols = c(subdivision_id, charge_id, circle_id), 
+            n_distinct
+        )
+    ) %>%
+    mutate(place = "Urban Sujawal")
+```
+
+Rural Sujawal
+
+```{r}
+rural_df %>%
+    filter(str_detect(district, "SUJAWAL")) %>%
+    mutate(taluka_id = paste0("taluka_", taluka_id)) %>%
+    group_by(taluka_id) %>%
+    summarise(
+        N_stc_per_taluka = n_distinct(stc_id),
+        N_tc_per_taluka = n_distinct(tc_id), 
+        total_pop_per_taluka = sum(pop), 
+        mean_pop_per_village = mean(pop))
+
+```
+
+
+## Sample Considerations
+
+We want to sample from every _taluka_ or _subdivision_ for rural Kambar and Karachi 
+East respectively. So we want to know, should we sample villages such that we 
+observe many __STCs__ and few 
+__TCs__ per __STC__; or should we sample villages such that we 
+observe many __TCs__ per __STC__ and relatively 
+fewer __STCs__. 
+
+The Karachi East analog is should we sample blocks so that we see many __charges__ 
+and few __circles__ per __charge__ or blocks such that we see few __charges__ but 
+many __circles__ per __charge__.
+
+In a first best scenario we'd sample as many STCs/Charges as possible. However, 
+it costs more to sample  a greater number of STCs/Charges because the location of each 
+village/block will be more dispersed. In other words, it's cheaper to sample 
+many TCs/circles per STC/charge but we learn less about zero-dose 
+children because of intra-cluster correlation.    
+
+
+## Calculating ICC
+
+
+We think literacy rate is highly (negatively) correlated to zero dose rate. For 
+instance, a UN survey of Karachi's slums found that conditional on being a zero 
+dose child, 93\% of mothers were illiterate. Therefore using village/circle level 
+literacy data we calculate literacy ICC and use this in place of zero dose ICC.
+
+We calculate ICC using two methods: one uses the normal approximation to the 
+Binomial and calculates the classic sum of squares within village/circle vs sum of 
+squares between villages/circles. The other uses a random effects logistic model 
+(which itself has to take a first order approximation). The final ICC used 
+splits the difference and averages over these two methods to give rural Kambar 
+$= 0.131$ and Karachi East $= 0.172$. 
+
+
+
+
+## Creating Simulated data
+
+We draw simulated probabilities of village/circle level zero dose rate that are 
+tailored to be centered around 0.05 (again based off the UN Karachi slum study) 
+with a correlation of -0.9 with village/circle literacy rate. This gives simulated 
+0 vax probabilities:
+
+```{r imp-0}
+include_graphics("../../data/output/hh-survey/kambar-imp-0-dose.png")
+
+include_graphics("../../data/output/hh-survey/karachi-imp-0-dose.png")
+```
+
+Next, we estimate a random effects model to calculate the group level and unit level 
+error variances and draw simulated individual level binary data drawn from distributions 
+using these estimated variables and estimated ICC values.
+
+To simulate binary data with intra-cluster correlation we can draw from the 
+beta-binomial distribution. In the conventional binomial distribution the probability 
+of success in each trial is fixed - in the beta-binomial distribution the probability 
+of success is itself a random variable drawn from the beta distribution. Using 
+our ICC and average probability of 0 doses we can solve for the parameters of the 
+beta-binomial that correspond to our problem and use this to simulate 0 vax children.
+
+
+## Creating a sampling plan 
+
+We sample one village/block per TC/circle and sample at least $x$ many TCs/circles 
+per STC/charge where $x$ is a simulation parameter. If there are any "spare" 
+villages/blocks left over after assigning $x$ TCs/circles per charge per STC/subdivision 
+we stratify by STC/subdivision and equally assing the remaining villages/blocks. 
+If there's still any remaining units we completely randomly allocate the leftovers. 
+
+
+
+# Running the simulation
+
+We vary the total number of units sampled and the number of units per group (i.e. 
+number of TCs per STC) and simulate each hyperparameter combination 200 times. Then 
+we estimate the 0 vax rate in each simulated draw and calculate the corresponding 
+clustered standard error. Our goal is to tradeoff sample size/sampling cost 
+against standard error size.
+
+
+## Results
+
+
+```{r}
+sim_df = read_csv(
+    "../../data/output/hh-survey/sample-size-all-sim-draws.csv"
+) %>%
+    mutate(type = if_else(type == "karachi east", "urban karachi east", type)) 
+fixed_sim_df = read_csv( 
+    "../../data/output/hh-survey/sample-size-fix-sim-draws.csv"
+) %>%
+    mutate(type = if_else(type == "karachi east", "urban karachi east", type)) 
+
+sim_df = bind_rows(
+    sim_df,
+    fixed_sim_df
+)
+
+sim_df = sim_df %>%
+    mutate(
+        district_type = str_extract(type, "^\\w+"), 
+        district = str_extract(type, "(?<= ).*")
+    )
+```
+
+
+```{r}
+
+# sim_df %>%
+#     group_by(district_type, district) %>%
+#     mutate( 
+#         n_inf = sum(!is.finite(std.error))
+#     ) %>%
+#     filter(n_inf > 100) %>%
+#     ungroup() %>%
+#     select(district, district_type) %>%
+#     unique()
+# sim_df %>%
+#     group_by(distric)
+#     filter(!is.finite(std.error))  %>%
+#     select(
+#         district, district_type
+#     ) %>%
+#     unique()
+
+```
+
+```{r}
+
+sim_df = sim_df %>%
+    filter(is.finite(std.error)) %>%
+    mutate( 
+        coverage = conf.low < 0.05 & 0.05 < conf.high, 
+        signif = p.value < 0.05 
+    )
+
+summ_sim_draws = sim_df %>%
+    group_by(district_type, district, units_per_group, total_units_to_sample) %>%
+    summarise(
+        rp = mean(coverage),
+        mean_se = median(std.error),
+        sd_se = sd(std.error),
+        pr_signif = mean(signif),
+        realised_n_units_per_group = mean(n_unique_units/n_unique_group_var),
+        n_unique_group_var = mean(n_unique_group_var),
+        n_unique_units = mean(n_unique_units),
+        n_unique_individuals = mean(n_unique_individuals), 
+        mean_0_vax = mean(mean_0_vax), 
+        n_draws = n())  %>%
+    mutate(
+        sd = sqrt(pr_signif*(1-pr_signif)/n_draws)
+    )
+
+
+summ_sim_draws %>%
+    filter(district_type == "urban") %>%
+    # filter(str_detect(district, "karachi")) %>%
+    ggplot(aes( 
+        x = total_units_to_sample, 
+        y = mean_se,
+        ymin = mean_se - 1.96*sd_se,
+        ymax = mean_se + 1.96*sd_se,
+        colour = factor(units_per_group) 
+    )) +
+    geom_pointrange(
+        position = position_dodge(0.5)
+    ) +
+    theme_bw() +
+    labs( 
+        title = "Estimator Standard Error - Urban",
+        subtitle = "Varying total blocks sampled and minimum number of blocks per charge/taluka", 
+        x = "N Blocks to Sample", 
+        y = "Mean Standard Error",
+        colour =  "Min Blocks per Charge/Taluka",
+        caption = "Datapoints missing where it's impossible to sample at least 5 blocks per charge.
+         For instance, in Karachi East all 4 towns with 5 blocks per charge isn't possible with only 15 total blocks."
+    ) +
+    facet_grid(district~units_per_group) +
+    theme( 
+        legend.position = "bottom"
+    )
+
+
+
+
+
+```
+
+
+
+```{r}
+
+summ_sim_draws %>%
+    filter(district_type == "rural") %>%
+    # filter(!str_detect(district, "karachi")) %>%
+    ggplot(aes( 
+        x = total_units_to_sample, 
+        y = mean_se,
+        ymin = mean_se - 1.96*sd_se,
+        ymax = mean_se + 1.96*sd_se,
+        colour = factor(units_per_group) 
+    )) +
+    geom_pointrange(
+        position = position_dodge(0.5)
+    ) +
+    theme_bw() +
+    labs( 
+        title = "Estimator Standard Error - Rural",
+        subtitle = "Varying total blocks sampled and minimum number of blocks per charge/taluka", 
+        x = "N Blocks to Sample", 
+        y = "Mean Standard Error",
+        colour =  "Min Blocks per Charge/Taluka",
+        caption = "Datapoints missing where it's impossible to sample at least 5 blocks per charge.
+         For instance, in Karachi East all 4 towns with 5 blocks per charge isn't possible with only 15 total blocks."
+    ) +
+    facet_grid(district~units_per_group) +
+    theme( 
+        legend.position = "bottom"
+    )
+```
+
+
+```{r}
+
+summ_sim_draws %>%
+    filter(district_type == "urban") %>%
+    # filter(str_detect(district, "karachi")) %>%
+    ggplot(aes( 
+        x = total_units_to_sample, 
+        y = mean_se, 
+        colour = factor(units_per_group)
+    )) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~district, ncol = 1) +
+    theme_bw() +
+    labs( 
+        title = "Estimator Variance without simulation uncertainty, Urban", 
+        y = "Estimator Variance",
+        x = "Total Units to Sample", 
+        colour = "Min Units per Group"
+    )
+
+summ_sim_draws %>%
+    filter(district_type == "rural") %>%
+    # filter(!str_detect(district, "karachi")) %>%
+    ggplot(aes( 
+        x = total_units_to_sample, 
+        y = mean_se, 
+        colour = factor(units_per_group)
+    )) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~district, ncol = 1) +
+    theme_bw() +
+    labs( 
+        title = "Estimator Variance without simulation uncertainty, Rural", 
+        y = "Estimator Variance",
+        x = "Total Units to Sample", 
+        colour = "Min Units per Group"
+    )
+
+```
+
+
+```{r, out.width="90%"}
+# include_graphics("../../data/output/hh-survey/sample-size-karachi-kambar-plot.png")
+```
+
+```{r, out.width="90%"}
+# include_graphics("../../data/output/hh-survey/no-ses-sample-size-karachi-kambar-plot.png")
+```
+
+
+
+
+Initial thoughts on interpreting this:
+
+Total number of observations matters much more than choices over how many groups 
+to sample. The optimal choice is 1 unit per group as expected but this is 
+essentially drowned out in comparison to the simulation noise. 

@@ -1,0 +1,240 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimplePlus}
+
+\usepackage{hyperref}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[short title]{Adaptive Trials and Participant Preferences} % The short title appears at the bottom of every slide, the full title is only on the title page
+\subtitle{}
+
+\author[Edward Jee] {Edward Jee}
+
+\institute[NTU] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+Development Tea
+}
+\date{\today} % Date, can be changed to a custom date
+
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{frame}
+    % Print the title page as the first slide
+    \titlepage
+\end{frame}
+
+\begin{frame}{Today's Plan}
+    % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+    \tableofcontents
+\end{frame}
+
+%------------------------------------------------
+\section{Adaptive Trials}
+%------------------------------------------------
+
+\begin{frame}{What is an Adaptive Trial?}
+
+    \begin{itemize}
+        \item An experimental trial where we change treatment assignments \textit{depending on the realisation of observed treatment outcomes.}
+        \item Each period we receive a new wave of participants and update treatment allocations 
+        using results from previous participants.
+        \item The goal is to maximise welfare of treatment participants, by learning 
+        about the optimal arm as quickly as possible. 
+        \item In computer science this is termed the \textit{multi-armed bandit} problem.
+    \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example Bandit}
+    \textit{And why are they called bandits?}
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[scale=0.1]{plots/bandit-image-example.png} 
+        \caption{Some real life bandits}
+        \label{<label>}
+    \end{figure}
+\end{frame}
+%------------------------------------------------
+
+\begin{frame}{Thompson Sampling}
+
+    A popular bandit algorithm is known as Thompson 
+    sampling:\footnote{Also known as probability matching.}
+\begin{enumerate}
+    \item At $t=0$ generate a prior, $Q_0$, over $\mu_k$, proceed to $t = 1$.
+    \item Sample $\nu_t \sim Q_{t-1}(\cdot | A_1, y_1, ..., A_{t-1}, y_{t-1})$
+    \item Choose $A_t = \arg\max_{i \in [k]} \mu_i(\nu_t)$ and observe $y_t$.
+    \item Update the posterior $Q_{t-1}(\cdot | A_1, y_1, ..., A_{t-1}, y_{t-1})$ given $y_t$.
+    \item Iterate $t = t+1$ and return to Step 2 until $t > T$.
+\end{enumerate}
+
+\end{frame}
+
+
+\begin{frame}
+
+    
+    In words:
+
+    \begin{itemize}
+        \item Generate a prior.
+        \item Take a random draw from this prior distribution and choose the best action given your draw.
+        \item Observe the reward associated with your action.
+        \item Update your posterior over each arm's rewards.
+        \item Today's posterior is tomorrow's prior $\rightarrow$ return to step two.
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Exploration-Exploitation Tradeoff}
+    Why do we like Thompson sampling?
+
+    \begin{itemize}
+        \item It neatly balances the exploration-exploitation tradeoff.
+        \item We don't want to spend all our time trying each arm in turn if one arm 
+        is clearly suboptimal.
+        \item Similarly, we don't want to commit too early to an arm and exclusively 
+        choose it when it's not the best arm. 
+    \end{itemize}
+
+    TS updates posterior beliefs each round and takes a \textit{random draw} from 
+    the posterior. This means we will choose to explore another arm over the 
+    "currently optimal" arm in proportion to the exact probability we believe it 
+    could be optimal.
+\end{frame}
+
+
+
+\begin{frame}
+    \frametitle{TS Example  - \href{https://towardsdatascience.com/thompson-sampling-fc28817eacb8}{Source}}
+
+   \begin{figure}[htbp]
+       \centering
+       \includegraphics[scale=0.2]{plots/ts-post.png}
+   \end{figure} 
+
+\end{frame}
+\begin{frame}{BB TS II}
+
+    Compare with the "greedy" alternative which doesn't sample from the posterior, 
+    merely updates $\hat{\mu}_i = \frac{\alpha_i}{\alpha_i + \beta_i}$:
+
+    \begin{figure}[htbp]
+        \centering
+       \includegraphics[scale=0.25]{plots/ts-example.png} 
+        \caption{Greedy vs Full Posterior Algorithm}
+    \end{figure} 
+
+\end{frame}
+
+
+\begin{frame}{Beta-Bernoulli TS}
+
+    Suppose we face a Bernoulli bandit so $\mu \in [0,1]^k$ but 
+    each arm has a different probability of success. 
+
+
+    Learner has an independent beta prior with parameters $\alpha_i, \beta_i$:
+    \begin{align*}
+        p(\mu_i) &= \frac{\Gamma(\alpha_i + \beta_i)}{\Gamma(\alpha_i) \Gamma(\beta_i)} 
+        \mu_i^{\alpha_i - 1} (1 - \mu_i)^{\beta_i - 1}
+    \end{align*}
+
+    Each round we update:
+    \begin{align*}
+        (\alpha_{i, t+1}, \beta_{i, t+1}) =\begin{cases}
+            (\alpha_{i, t}, \beta_{i, t}) &  A_t \neq i \\
+            (\alpha_{i, t}, \beta_{i, t}) + (\mu_t, 1 - \mu_t) & A_t = i
+        \end{cases} 
+    \end{align*}
+   Posterior mean:
+    $$
+   \hat{\mu}_i = \frac{\alpha_i}{\alpha_i + \beta_i}
+   $$
+    $\alpha, \beta$ are "pseudo-counts" of successes and failures.
+
+    Due to conjugacy, the posterior will also be beta!
+
+\end{frame}
+
+%------------------------------------------------
+\section{Adaptive Trials with}
+%------------------------------------------------
+
+\begin{frame}{Table}
+    \begin{table}
+        \begin{tabular}{l l l}
+            \toprule
+            \textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2} \\
+            \midrule
+            Treatment 1         & 0.0003262           & 0.562               \\
+            Treatment 2         & 0.0015681           & 0.910               \\
+            Treatment 3         & 0.0009271           & 0.296               \\
+            \bottomrule
+        \end{tabular}
+        \caption{Table caption}
+    \end{table}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Theorem}
+    \begin{theorem}[Mass--energy equivalence]
+        $E = mc^2$
+    \end{theorem}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Figure}
+    Uncomment the code on this slide to include your own image from the same directory as the template .TeX file.
+    %\begin{figure}
+    %\includegraphics[width=0.8\linewidth]{test}
+    %\end{figure}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
+    \frametitle{Citation}
+    An example of the \verb|\cite| command to cite within the presentation:\\~
+
+    This statement requires citation \cite{p1}.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{References}
+    % Beamer does not support BibTeX so references must be inserted manually as below
+    \footnotesize{
+        \begin{thebibliography}{99}
+            \bibitem[Smith, 2012]{p1} John Smith (2012)
+            \newblock Title of the publication
+            \newblock \emph{Journal Name} 12(3), 45 -- 678.
+        \end{thebibliography}
+    }
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+    \Huge{\centerline{\textbf{The End}}}
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}

@@ -1,0 +1,17 @@
+{
+  "remoteListeningOn": {
+    "port": 39036
+  },
+  "osReleaseId": "rhel",
+  "arch": "x86_64",
+  "webUiAccessToken": "",
+  "sshAuthSock": "",
+  "display": "",
+  "tmpDir": "/run/user/1240560664",
+  "platform": "linux",
+  "connectionToken": "d4013943-8bcd-4b80-a7b5-328f73b7c720",
+  "pid": 137078,
+  "ipcHandlePath": "/run/user/1000/vscode-ssh-askpass-3b8b1dbddb255abf61da72eef232bf072b4e075f.sock",
+  "socksPort": 37173,
+  "startupTime": 1648055603205
+}

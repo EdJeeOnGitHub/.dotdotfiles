@@ -1,0 +1,45 @@
+\documentclass{exam}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\printanswers
+\begin{document}
+    
+
+
+\section{Large Sample Theory}
+\begin{questions}
+    
+\question If $X_n \xrightarrow{p} 0$ then $E[X_n] \rightarrow 0$
+\begin{solution}
+False. $X_n = n$ with probability $1/n$ and 0 with prob $1 - 1/n$,  $X = 0$
+\end{solution}
+
+
+
+\question If $X_1,...,X_n$ are an i.i.d. sequence of random variables with $0 < \text{Var}(X_i) < \infty$ then 
+$P(Z_n = 1) \rightarrow 1/2$ with $Z_n = \mathbb{I}\{\bar{X}_n > E[X_i]\}$
+
+
+\begin{solution}
+    \begin{align*}
+    P(Z_n = 1) &= P(\bar{X}_n - E[X_i] > 0) \\
+    \bar{X}_n - E[X_i] &> 0 \\
+    \frac{
+        \sqrt{n}(\bar{X}_n - E[X_i])
+    }{
+        \sqrt{\text{Var}(X)}
+    } 
+    \end{align*}
+\end{solution}
+
+\end{questions}
+
+
+
+
+
+
+
+
+
+\end{document}

@@ -1,0 +1,621 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimplePlus}
+
+\usepackage{hyperref}
+\usepackage{bm}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\setbeamertemplate{footline}{%
+  \raisebox{5pt}{\makebox[\paperwidth]{\hfill\makebox[10pt]{\scriptsize\insertframenumber}}}}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[short title]{Adaptive Trials and Participant Preferences} % The short title appears at the bottom of every slide, the full title is only on the title page
+\subtitle{}
+
+\author[Edward Jee] {Edward Jee}
+
+\institute[NTU] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+Development Tea
+}
+\date{\today} % Date, can be changed to a custom date
+
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{frame}
+    % Print the title page as the first slide
+    \titlepage
+\end{frame}
+
+\begin{frame}{Today's Plan}
+    % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+    \tableofcontents
+\end{frame}
+
+%------------------------------------------------
+\section{Adaptive Trials}
+%------------------------------------------------
+
+\begin{frame}{What is an Adaptive Trial?}
+
+    \begin{itemize}
+        \item An experimental trial where we change treatment assignments \textit{depending on the realisation of observed treatment outcomes.}
+        \item Each period we receive a new wave of participants and update treatment arm allocations 
+        using results from previous participants.
+        \item The goal is to maximise welfare of treatment participants, by learning 
+        about the optimal arm as quickly as possible. 
+        \item In computer science this is termed the \textit{multi-armed bandit} problem.
+    \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example Bandit}
+    \textit{And why are they called bandits?}
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[scale=0.1]{plots/bandit-image-example.png} 
+        \caption{Some real life bandits}
+        \label{<label>}
+    \end{figure}
+\end{frame}
+%------------------------------------------------
+
+\begin{frame}{Thompson Sampling}
+
+    A popular bandit algorithm is known as Thompson 
+    sampling:\footnote{Also known as probability matching.}
+\begin{enumerate}
+    \item At $t=0$ generate a prior, $Q_0$, over $\mu_k$, proceed to $t = 1$.
+    \item Sample $\nu_t \sim Q_{t-1}(\cdot | A_1, y_1, ..., A_{t-1}, y_{t-1})$
+    \item Choose $A_t = \arg\max_{i \in [k]} \mu_i(\nu_t)$ and observe $y_t$.
+    \item Update the posterior $Q_{t-1}(\cdot | A_1, y_1, ..., A_{t-1}, y_{t-1})$ given $y_t$.
+    \item Iterate $t = t+1$ and return to Step 2 until $t > T$.
+\end{enumerate}
+
+\end{frame}
+
+
+\begin{frame}
+
+    
+    In words:
+
+    \begin{itemize}
+        \item Generate a prior over each arm's rewards.
+        \item Take a random draw from this prior distribution and choose the best action given your draw.
+        \item Observe the reward associated with your action.
+        \item Update your posterior over arm rewards.
+        \item Today's posterior is tomorrow's prior $\rightarrow$ return to step two.
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Exploration-Exploitation Tradeoff}
+    Why do we like Thompson sampling?
+
+    \begin{itemize}
+        \item It neatly balances the exploration-exploitation tradeoff.
+        \item We don't want to spend all our time trying each arm in turn if one arm 
+        is clearly suboptimal.
+        \item Similarly, we don't want to commit too early to an arm and exclusively 
+        choose it when it's not the best arm. 
+    \end{itemize}
+
+    TS updates posterior beliefs each round and takes a \textit{random draw} from 
+    the posterior. This means we will choose to explore another arm over the 
+    "currently optimal" arm in proportion to the exact probability we believe it 
+    could be optimal.
+\end{frame}
+
+
+
+\begin{frame}{Beta-Bernoulli TS}
+
+    Suppose we face a Bernoulli bandit so $\mu \in [0,1]^k$ but 
+    each arm has a different probability of success. 
+
+
+    Learner has an independent beta prior with parameters $\alpha_i, \beta_i$:
+    \begin{align*}
+        p(\mu_i) &= \frac{\Gamma(\alpha_i + \beta_i)}{\Gamma(\alpha_i) \Gamma(\beta_i)} 
+        \mu_i^{\alpha_i - 1} (1 - \mu_i)^{\beta_i - 1}
+    \end{align*}
+
+    Each round we update:
+    \begin{align*}
+        (\alpha_{i, t+1}, \beta_{i, t+1}) =\begin{cases}
+            (\alpha_{i, t}, \beta_{i, t}) &  A_t \neq i \\
+            (\alpha_{i, t}, \beta_{i, t}) + (\mu_t, 1 - \mu_t) & A_t = i
+        \end{cases} 
+    \end{align*}
+   Posterior mean:
+    $$
+   \hat{\mu}_i = \frac{\alpha_i}{\alpha_i + \beta_i}
+   $$
+    $\alpha, \beta$ are "pseudo-counts" of successes and failures.
+
+    Due to conjugacy, the posterior will also be beta!
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{TS Example  - \href{https://towardsdatascience.com/thompson-sampling-fc28817eacb8}{Source}}
+
+   \begin{figure}[htbp]
+       \centering
+       \includegraphics[scale=0.2]{plots/ts-post.png}
+   \end{figure} 
+
+\end{frame}
+
+\begin{frame}{BB TS II}
+
+
+    Compare with the "greedy" alternative which doesn't sample from the posterior, 
+    merely updates $\hat{\mu}_i = \frac{\alpha_i}{\alpha_i + \beta_i}$:
+
+    \begin{figure}[htbp]
+        \centering
+       \includegraphics[scale=0.25]{plots/ts-example.png} 
+        \caption{Greedy vs Full Posterior Algorithm}
+    \end{figure} 
+
+\end{frame}
+
+
+\section{An Example in Development}
+\begin{frame}{Bandits in Economics I}
+    \begin{itemize}
+        \item Computer Scientists focus on a single learner choosing one action.
+        \item We need to assign treatment proportions for multiple participants rather 
+        than a single action.
+        \item Therefore assign treatments in proportion to which they're optimal:
+        $p_k = \frac{1}{H} \sum^H_{h=1} \mathbb{I}\{\mu_k(\nu_{h})  > \mu_l(\nu_{h}) \}, k \neq l$
+    \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}{Assignment Probabilities Example} 
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.45]{plots/univariate-mab.png} 
+\end{figure}    
+
+\end{frame}
+
+\begin{frame}{Bandits in Economics II}
+
+
+    \begin{itemize}
+        \item Caria et al (2021) estimate the effect of cash, information, and psychological 
+    incentives on Syrian refugees and local jobseekers in Jordan. 
+        \item They use a \textbf{Tempered Thompson Algorithm} to balance maximising treatment 
+    precision whilst also maximising experimental participant welfare.
+    \end{itemize}
+
+    The algorithm:
+
+    \begin{enumerate}
+        \item Generate a prior.
+        \item For $t = 1,2,...,n$: sample $\nu_t \sim Q(\cdot | A_1, X_1, ..., A_{t-1}, X_{t-1})$
+        \item \begin{itemize}
+            \item With probability $\gamma$  sample $A_t$ from $\{1, ..., k\}$
+            \item With probability $1 - \gamma$ $A_t = \arg\max_{i \in [k]} \mu_i(\nu_t)$
+        \end{itemize} 
+    \end{enumerate}
+
+    \begin{exampleblock}{Balancing Precision and Welfare}
+        When $\gamma = 1$ we have a traditional RCT, when $\gamma = 0$ we have the 
+        Thompson Algorithm. 
+        When $0 < \gamma < 1$ TTA asymptotically minimises regret, subject to  
+        each treatment has probability of assignment at least $\gamma/k$.
+    \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Thompson Sampling\footnote{$i$ now indexes individuals, and $k = 1, ..., K$ treatment arms.}}
+
+    Whilst they care about endline outcomes - authors use \textbf{6 week rapid follow up} outcomes as
+    $Y_{it}^k$.
+
+    \begin{align*}
+       Y_{it}^k | (X_{it} = x, \mu^{kx}, \alpha^k, \beta^k) &\sim Ber(\mu^{kx}) \\
+       \mu^{kx} | (\alpha^k, \beta^k) &\sim Beta(\alpha^k, \beta^k) \\
+       (\alpha^k, \beta^k) &\sim \pi
+    \end{align*}
+
+\end{frame}
+
+
+
+
+% \begin{frame}{Inference}
+
+%     \begin{itemize}
+%         \item Fortunately, inference is "easy" in TTA and we can just read off the posterior 
+%     used for treatment assignment.
+%         \item The authors also perform RI as an alternative.
+%     \end{itemize}
+
+% \end{frame}
+
+
+\begin{frame}{Problems In This Setting I}
+
+
+    \begin{figure}[htbp]
+        \centering
+       \includegraphics[scale=0.2]{plots/ramadan.png} 
+        \caption{Non-stationary reward distribution?}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Problems In This Setting II}
+
+    \begin{figure}[htbp]
+        \centering
+       \includegraphics[scale=0.15]{plots/tta-assignment.png} 
+       \caption{Intermediate outcome chosen wasn't particularly indicative of 
+       final outcome.}
+    \end{figure}
+    
+
+\end{frame}
+
+\begin{frame}{Problems In This Setting III}
+
+   \begin{figure}[htbp]
+       \centering
+      \includegraphics[scale=0.15]{plots/good-tta-assignment.png} 
+   \end{figure} 
+
+       Simulations using \textbf{two month} outcomes.
+\end{frame}
+
+
+\begin{frame}{Happy RCT Participants?}
+
+    \begin{figure}[htbp]
+        \centering
+       \includegraphics[scale=0.3]{plots/welfare.png} 
+    \end{figure}
+
+    \begin{itemize}
+        \item $\Delta_1$ compares welfare from realised assignment to random assignment
+        \item $\Delta_2$ compares welfare from optimal targeted (i.e. policy per stratum) policy to no intervention.
+        \item $\Delta_3$ compares welfare from optimal non-targeted (i.e. policy fixed across strata) policy to no intervention.
+
+    \end{itemize}
+\end{frame}
+
+
+
+\section{Preferences and Adaptive Trials}
+
+\begin{frame}{Adaptive trials and Preferences}
+        \begin{itemize}
+            \item Are we really maximising welfare or just $S = \sum_t^T\sum_i^N Y_{i,t}$?
+            \item How do we choose which outcome we care about?
+             \begin{itemize}
+                 \item Either across distinct measures?
+                 \item Or across timeframes like Caria et al?
+             \end{itemize}
+             \item Are we using the econometrician's loss function or the participant's? 
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Multiple Outcomes}
+
+Often we observe many outcomes of interest:
+
+\begin{itemize}
+    \item Let  $Y_t = \begin{bmatrix} y^1_t & y^2_t & ... & y^j_t\end{bmatrix}$
+    \item Now each treatment arm $k$ has expected reward vector $\bm{\mu}_k = \begin{bmatrix}
+    \mu^1_k & \mu^2_k & ... & \mu^j_k
+\end{bmatrix}'$. 
+    \item We need to maximise some scalar $S_t = f(Y_t)$.
+    \item Choosing a single outcome corresponds to $Y_t' e_j$ for some $j$.
+    \item Maximising the sum of the $y_t$s corresponds to $Y_t' \mathbf{1}$.
+\end{itemize}
+
+
+But these all place strict restrictions on the preferences of individuals.
+\end{frame}
+
+
+\begin{frame}{Towards a Solution}
+Ideally, we'd like to know how individuals trade-off a unit of $y_t^1$ for a unit of 
+$y^2_t$.   
+    
+    \begin{itemize}
+        \item Just asking for individual's valuations of goods/outcomes 
+        isn't necessarily the best idea.
+    \end{itemize}
+         $\implies$ use revealed preference to discipline choices.
+\begin{itemize}
+    \item Ideal experiment varies treatment arm's expected effect on 
+    outcomes and observes choices of participants.
+\end{itemize}
+
+$\implies$ the posterior in a bandit problem provides us with exactly such variation.
+
+
+\end{frame}
+
+
+
+
+\begin{frame}{Discrete Choice Model}
+
+Let $U_k = V_k + \varepsilon_k$ be the utility from \textit{choosing} treatment $k$.
+\begin{align*}
+V_k = 
+\gamma_1 \mu^1_k + \gamma_2 \mu^2_k + ... + \gamma_J \mu^J_k = \bm{\mu}_k\bm{\gamma}'
+\end{align*}
+ 
+     A participant, if offered the choice 
+of treatment arms, will only choose arm $l$ if:
+ \begin{align*}
+  \varepsilon_n < (V_l - V_n) + \varepsilon_l, 
+\forall n \neq l
+ \end{align*}
+
+
+
+In the familiar IO setup:
+
+\begin{itemize}
+    \item Each treatment arm is a good.
+    \item And each expected treatment effect, $\mu_k^j$,  is a \textit{characteristic} of that good.
+\end{itemize}
+
+As $\mu_k^j$ varies across posterior draws and rounds we trace out indifference 
+curves for $y_t^1, y_t^2, ..., y_t^j$.
+
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{}
+
+    Therefore, modified "utility" Thompson sampling involves:
+
+
+\begin{enumerate}[<+->]
+    \item At $t=0$ generate a prior, $(Q_0, F_0)$, over $(\bm{\mu}_k, \bm{\gamma})$. Proceed to $t=1$.
+    \item With probability $\delta$ assign participants to sample $\mathcal{S}_t$ and probability
+    $1 - \delta$ to sample $\mathcal{W}_t$.      \\
+     \textbf{Preference Estimation Step}
+    \item Sample $W_t$ draws $\nu_{w, t} \sim Q_{t-1}(\cdot | A_1, Y_1, ..., A_{t-1}, Y_{t-1})$.
+    \item Generate $\bm{\mu}_k(\nu_{w,t})$ and inform each participant in $\mathcal{W}$ 
+    of one posterior draw's expected reward $\bm{\mu}_k(\nu_{w,t})$.
+    \item Allow participants in $\mathcal{W}$ to choose a treatment arm $k$ and update the 
+    multinomial logit posterior $F_{t-1}(\cdot | K_1, \bm{\mu}_k(\nu_{w, 1}), ..., K_{t-1}, \bm{\mu}_k(\nu_{w, t-1}))$ given 
+    the vector of observed choices $K_t$.
+    \\
+    \textbf{Treatment Arm Estimation Step}
+    \item Sample $H$ draws $\omega_{h,t} \sim F_{t}(\cdot | K_1, \bm{\mu}_k(\nu_{w, 1}), ..., K_{t}, \bm{\mu}_k(\nu_{w, t})), \nu_{h, t} \sim Q_{t-1}(\cdot | A_1, Y_1, ..., A_{t-1}, Y_{t-1})$
+    \item Choose $p_k = \frac{1}{H} \sum^H_{h=1} \mathbb{I}\{\bm{\mu}_k(\nu_{h,t}) \bm{\gamma}(\omega_{h,t})' > \bm{\mu}_l(\nu_{h,t}) \bm{\gamma}(\omega_{h,t})'\}, k \neq l$ and assign 
+    participants to treatment arm $k$ with probability $p_k$.
+    \item Observe $Y_t$ and update the posterior $Q_{t-1}(\cdot | A_1, Y_1, ..., A_{t-1}, Y_{t-1})$ over $\bm{\mu}_k$. 
+    \item Return to Step 2 until $t > T$.
+\end{enumerate}
+
+
+\end{frame}
+
+
+\begin{frame}{Utility TS Summary}
+    More simply:
+    \begin{itemize}
+        \item Draw $\bm{\mu}_{k, i}$ from the posterior for each individual in the "welfare" arm. 
+        \item Report a $\bm{\mu}_{k, i}$ to each individual and observe their choices.
+        \item Regress their choices on $\bm{\mu}_{k,i}$ and update posterior over $\gamma$.
+        \item Sample from joint posterior and draw $\bm{\mu}_{k}, \gamma$
+        \item Choose treatment proportions according to probability  $\bm{\mu}_k \gamma'$ is 
+        greater than $\bm{\mu}_l \gamma', l \neq k$.
+        \item Observe rewards across arms and update $\bm{\mu}_k$ posterior.
+        \item Return to step 1.
+         \end{itemize}
+
+\end{frame}
+
+\begin{frame}{What's Happening?}
+
+\begin{itemize}
+    \item The random utility model lets us map choices over treatment arms to preferences 
+over outcomes.
+    \item Variation in posterior draws generates variation to sketch out MRS.
+    \begin{itemize}
+        \item Our treatment effects from the treatment sample become our $X$s in the welfare sample.
+    \end{itemize}
+    \item We choose optimal treatment allocations whilst simultaenously allowing for 
+    uncertainty in treatment effect sizes \textbf{and uncertainty in preferences}.
+    \item We've reformulated the problem as a \textbf{contextual linear bandit}.
+     \begin{itemize}
+         \item Each period we learn about the context we face (preferences) and 
+         and make the best choice given these preferences.
+     \end{itemize}
+\end{itemize}
+    
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Joint Estimation Example}
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[scale=0.45]{plots/mab-mrs-ot.png} 
+        \caption{<caption>}
+        \label{<label>}
+    \end{figure}
+
+\end{frame}
+
+
+
+\begin{frame}{Comparing MRS Weights to Summation}
+
+   \begin{figure}[htbp]
+       \centering
+       \includegraphics[scale=0.45]{plots/comp-prop.png} 
+   \end{figure} 
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{A "Tricky" Example}
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[scale=0.45]{plots/hard-mab-example.png} 
+    \end{figure}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Welfare Comparison}
+
+    \begin{figure}[htbp]
+        \centering
+       \includegraphics[scale=0.45]{plots/in-sample-welfare.png} 
+    \end{figure}
+    
+
+\end{frame}
+
+%------------------------------------------------
+\section{Simulation Evidence}
+%------------------------------------------------
+
+
+\begin{frame}[label=sims]{Simulations}
+
+    Simulate 100 trials each with 10 rounds and 50 participants per round.\footnote{I made a 
+    small mistake here which doesn't qualitatively change the results.}
+    Test the performance of:
+
+    \begin{itemize}
+        \item Random assignment
+        \item Adaptive trial with first outcome only, ("first weights").
+        \item Adaptive trial with summed outcomes, ("equal weights").
+        \item "Utility" adaptive trial, ("estimated weights").
+    \end{itemize}
+    \hyperlink{sim-setup}{\beamerskipbutton{Simulation Parameters}}
+
+\end{frame}
+
+
+\begin{frame}{Simulation Results}
+    \input{tables/sim-summ.tex}
+\end{frame}
+
+
+\begin{frame}{Ranking Welfare Across Algorithms}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.45]{plots/trial-welfare-ranks.png} 
+\end{figure}    
+\end{frame}
+
+
+
+
+%------------------------------------------------
+
+\begin{frame}{Problems}
+    Some issues:
+    \begin{itemize}
+        \item If we learn "too quickly" about the best treatment effect, we have 
+        very little variation in the welfare arm.
+    \end{itemize}
+
+    This only happens when a treatment pareto dominates other arms. But then 
+    we know the optimal arm without learning MRS!
+
+    \begin{itemize}
+        \item If participants don't use reported $\bm{\mu}_k(\nu)$ draws to 
+        make their choices.
+    \end{itemize}
+
+    We can't learn about MRS. Can compare distribution of a control, "prior", group and 
+    check whether posteriors update in welfare arm.
+
+
+    $\implies$ if they don't update, what do we do?
+
+    \begin{itemize}
+        \item Sample splitting reduces power.
+    \end{itemize}
+
+    A tentative solution uses an instrument and pools welfare sample into treatment 
+    sample.
+    
+
+\end{frame}
+
+
+\begin{frame}{Conclusion}
+
+    When we observe:
+
+    \begin{itemize}
+        \item Multiple outcomes of interest.
+        \item With sufficient timeliness.
+        \item And can easily adjust treatment proportions
+    \end{itemize}
+
+    We probably shouldn't be imposing our welfare function on 
+    subject participants.
+    
+
+\parskip=20pt
+
+    We can jointly estimate the optimal treatment; participants' marginal rates of substitution;
+     and maximise in-sample welfare.
+
+
+    
+
+\end{frame}
+
+
+
+
+
+\begin{frame}
+    \Huge{\centerline{\textbf{The End}}}
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+
+\begin{frame}[label=sim-setup]{Simulation Set Up} % Need to use the fragile option when verbatim is used in the slide
+\begin{align*}
+    \bm{\mu}_k &\sim N(0_J, \mathbb{I}_J) \\
+    \gamma_j  &\sim N(0, 1) \\
+    y_{k}^j &\sim N(\mu_k^j , 3) \\
+    U_k &= \bm{\mu}_k \gamma' + \varepsilon_k \\
+    \varepsilon_k &\sim \text{Gumbel}(0,1)
+\end{align*}
+    \hyperlink{sims}{\beamerskipbutton{back}}
+\end{frame}
+
+\end{document}

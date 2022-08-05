@@ -1,0 +1,211 @@
+---
+title: "TakeUp Distance Assignment"
+format: html
+editor: source 
+---
+
+```{r}
+#| label: setup
+
+library(magrittr)
+library(tidyverse)
+library(sf)
+library(here)
+library(broom)
+
+
+source(here("rct-design-fieldwork", "takeup_rct_assign_clusters.R"))
+source(here("analysis_util.R"))
+source(here("dist_structural_util.R"))
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+```
+
+```{r}
+#| label: load-geo-data
+
+wgs.84 <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+kenya.proj4 <- "+proj=utm +zone=36 +south +ellps=clrk80 +units=m +no_defs"
+
+rct.schools.data <- read_rds(here("data", "takeup_rct_schools.rds"))
+load(here("data", "takeup_village_pot_dist.RData"))
+load(here("data", "analysis.RData"))
+
+schools <- st_as_sf(rct.schools.data, crs = wgs.84)
+villages <- village.centers %>% 
+  st_as_sf(coords = c("lon", "lat"), crs = wgs.84)
+```
+
+```{r}
+#| fig-width: 8
+
+ggplot(schools) +
+  geom_sf(aes(color = "Schools"), size = 0.5) +
+  geom_sf(aes(color = "Villages"), data = villages) +
+  scale_color_manual("", values = c("Schools" = "black", "Villages" = "red"))
+```
+
+```{r}
+villages %<>% 
+  mutate(
+    dist_to_closest_school = st_transform(., kenya.proj4) %>% 
+      st_distance(st_transform(schools, kenya.proj4)) %>%
+      plyr::alply(1, min) %>% 
+      unlist()
+  )
+```
+
+```{r}
+villages %>% 
+  ggplot(aes(dist_to_closest_school)) +
+  geom_histogram(aes(y = stat(density)), binwidth = 100, alpha = 0.5) +
+  labs(x = "Distance to Closest School", y = "Density")
+
+villages %>% 
+  ggplot(aes(dist_to_closest_school)) +
+  geom_histogram(aes(y = stat(density), fill = dist.pot.group), position = "identity", binwidth = 100, alpha = 0.5) +
+  scale_fill_discrete("Distance Assignment", labels = str_to_title) +
+  labs(x = "Distance to Closest School", y = "Density")
+```
+
+
+
+## ed quick additions
+
+
+tldr: I check whether school observables change as distance to schools change, not in a particularly smart way. 
+It doesn't look like there's any relationship between a village's distance to a POT and average school characteristics. Then I try 
+Borusyak and Hull's (2022) thing.
+
+https://www.dropbox.com/s/ajjld1b8gw470yr/borusyak_hull_wp_dec21.pdf?raw=1
+
+```{r}
+
+# Find all schools within 1500 units of a village
+vill_school_pairs = villages %>% 
+  st_join(
+    x = .,
+    y = st_transform(schools, kenya.proj4),
+    join = st_is_within_distance, 
+    dist = 1500,
+    left = TRUE
+  ) 
+# Calculate all pairwise distances between every school and 
+# village (even those > 1500)
+all_vill_school_distances = st_distance(
+  villages, 
+  schools
+)
+# Calculate average distance from school, conditional on school < 1500
+expected_distance = apply(all_vill_school_distances, FUN = function(x){mean(x[x < 1500])}, MARGIN = 1)
+villages$expected_distance = expected_distance
+
+# Create set of numeric school variable to check for balance
+balance_vars = schools %>%
+  select_if(is.numeric) %>%
+  select(-contains("gps")) %>%
+  st_drop_geometry() %>%
+  colnames()
+
+check_observables = function(data, variable, balance_vars) {
+
+  balance_formulae = map(
+    balance_vars,
+    ~as.formula(paste0("`", .x,  "` ~ ", variable))
+  )
+
+  balance_fits = map2_dfr(
+    balance_formulae,
+    balance_vars,
+    ~lm(
+      .x,
+      data = data,
+      na.action = na.omit
+    ) %>% tidy()  %>% mutate(variable = .y)
+  ) %>%
+    filter(!str_detect(term, "Intercept"))
+    return(balance_fits)
+}
+
+
+dist_pot_check = check_observables(
+  vill_school_pairs,
+  variable = "log(dist.to.pot)",
+  balance_vars = balance_vars
+)
+
+dist_pot_group_check = check_observables(
+  vill_school_pairs,
+  variable = "dist.pot.group",
+  balance_vars = balance_vars
+)
+
+dist_closest_school_check = check_observables(
+  vill_school_pairs,
+  variable = "log(dist_to_closest_school)",
+  balance_vars = balance_vars
+)
+
+dist_pot_weight_check = check_observables(
+  vill_school_pairs,
+  variable = "log(dist.to.pot) + log(expected_distance)",
+  balance_vars = balance_vars
+)
+
+dist_checks = bind_rows(
+  dist_closest_school_check,
+  dist_pot_group_check,
+  dist_pot_check,
+  dist_pot_weight_check %>%
+    filter(term == "log(dist.to.pot)") %>%
+    mutate(term = str_c(term, " reweighted"))
+) %>%
+  filter(!is.nan(p.value)) 
+
+
+n_signif_diff_after_adjust = dist_checks %>%
+  group_by(term) %>%
+  mutate(p_adj = p.adjust(p.value, method = "BH")) %>%
+  filter(p_adj < 0.05)
+
+
+
+dist_checks %>%
+  ggplot(aes( 
+    sample = p.value,
+    colour = term
+  )) +
+  stat_qq(distribution = stats::qunif,
+          alpha = 1, geom = "line") +
+  stat_qq_line(distribution = stats::qunif,
+               colour = "black",linetype = "longdash") +
+  theme_bw() +
+  labs(
+      x = "Theoretical Quantile", 
+      y = "Realised Quantile",
+      title = "Under Set Null, P Values ~ U(0,1)"
+  )
+
+```
+
+
+
+Borusyak and Hull (2022) wouldn't use variation in continuous distance to POT but the variation in the difference between expected and realised distance to POT. Whilst 
+close and far is generated randomly, distance to POT has a non-random component:
+
+
+$$
+dist = \underbrace{I[\text{close} = 1]}_{\text{exog}} \underbrace{\text{km to close school}}_{endog} + (1 - I_\text{close}) \text{km to far school}
+$$
+
+
+By permuting through alternative, hypothetical RCT assignment draws they estimate $\mu$ the expected distance to a close school and 
+the expected distance to a far school. This can either be controlled for directly or used as a generated instrument:
+
+$$
+Z = dist - \mu
+$$
+
+This is essentially using the difference between the expected distance and realised distance as an instrument - since the actual treatment assignment was chosen randomly from a set of hypothetical draws, this variation is as good as random. They argue this has improved 
+power properties too, so even though it looks like distance is orthog to school characteristics might still be useful here.
+

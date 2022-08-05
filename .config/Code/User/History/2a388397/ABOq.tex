@@ -1,0 +1,85 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+    }
+
+\usepackage{listings}
+
+\begin{document}
+   
+
+
+Start with a classic simultaneous equation model:
+
+\begin{align*}
+    Y_1 &= X_1 \xi_1 + X_2 \pi_1 + U_1 \\
+    Y_2 = X_1 \xi_2 + X_2 \pi_2 + U_2
+\end{align*}
+
+We're going to treat $Y_1$ as our endogenous variable and $Y_2$ as our outcome 
+of interest. $X_1$ is a matrix of exogenous controls and $X_2$ are our instruments 
+(people call these excluded instruments).
+
+Instrumental variables/two stage least squares represents the following implied model:
+
+\begin{align*}
+    Y_2 &= X_1 \delta + Y_1 \gamma + V
+\end{align*}
+
+
+which is to say $Y_1$ is a function of exogenous controls and our endogenous $Y_1$. 
+This is also where the term excluded instrument comes from - $X_2$ only influences 
+$Y_2$ through $Y_1$.
+
+
+Working through algebra and matching terms:
+
+\begin{align*}
+    Y_2 &= X_1 \delta + Y_1 \gamma + V \\
+    Y_2 &= X_1 \delta + (X_1 \xi_1 + X_2 \pi_1 + U_1) \gamma + V \\
+    \implies Y_2 &= X_1 (\delta + \gamma \xi_1) + X_2 \gamma \pi_1 + \gamma U_1 + V
+\end{align*}
+
+Therefore:
+
+\begin{align*}
+    \delta + \gamma \xi_1 &= \xi_2 \\
+    \gamma \pi_1 &= \pi_2  \\
+    \implies \\
+    \begin{bmatrix}
+        Y_1 & Y_2
+    \end{bmatrix} &= \begin{bmatrix}
+        X_1 & X_2
+    \end{bmatrix}
+    \begin{bmatrix}
+        \xi_1 & \xi_2 \\
+        \pi_1 & \pi_2
+    \end{bmatrix} 
+     &= \begin{bmatrix}
+        X_1 & X_2
+    \end{bmatrix}
+    \begin{bmatrix}
+        \xi_1 &  \delta + \gamma \xi_1 \\
+        \pi_1 & \gamma \pi_1
+    \end{bmatrix} 
+\end{align*}
+
+Incidentally, this is why people get uncomfortable with IV with non-linear first/second 
+stages. The substitution we did above only works in a linear setting because IV 
+is effectively a linear projection and so everything goes through nicely.
+
+
+In Stan code this looks like \href{https://gist.github.com/EdJeeOnGitHub/f728ac156da2d8dafa4dda8cd1a6b336}{this}.
+
+\textit{This is a really bad example as I stupidly don't have a simpler case. The only 
+thing worth focusing on is the } \textbf{create_beta} \textit{function}
+
+
+\end{document}

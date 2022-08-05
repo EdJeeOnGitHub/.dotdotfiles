@@ -1,0 +1,25 @@
+Host hammad-laptop-server 
+  # HostName 192.168.1.252
+  # HostName 10.5.235.148
+  HostName 192.168.0.71
+  Port 22
+  User basicuserhammad
+
+Host ed-laptop-server
+  # HostName 192.168.1.252
+  # HostName 10.5.235.148
+  HostName 192.168.0.71
+  Port 22
+  User basicuser
+
+Host midway2.rcc.uchicago.edu
+  HostName midway2.rcc.uchicago.edu
+  User edjee
+
+Host athens
+  HostName athens.uchicago.edu
+  User edjee
+
+Host acropolis
+  HostName acropolis.uchicago.edu
+  User edjee

@@ -1,0 +1,97 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage[]{amsfonts}
+\newcommand{\indep}{\perp \!\!\! \perp}
+
+\begin{document}
+   
+Suppose we have binary $Y$ and $X$ and we want to know the effect of $X$ on $Y$ 
+after conditioning on some propensity score which is a function of covariates 
+$C$. The authors propose the following joint likelihood:
+
+\begin{align*}
+    L(Y, X | C, \theta) &= \prod^n_{i = 1} \{
+        g_x^{-1}(C_i \gamma)\}^{X_i} \{
+            1 - g_x^{-1}(C_i\gamma)\}^{1 - X_i} \times \\
+            &\{
+                g_y^{-1}(\xi_0 + \beta X_i + \xi h(\gamma, C_i) + \delta C^+_i)
+                \}^{Y_i} 
+                \{1 -
+                g_y^{-1}(\xi_0 + \beta X_i + \xi h(\gamma, C_i) + \delta C^+_i)
+                \}^{1 - Y_i} 
+\end{align*}
+
+We estimate the propensity score in the first line $g_x^{-1}(C_i\gamma)$ and 
+condition on it in the second line by adding it as a covariate in the mean vector 
+that is subsequently transformed by the link function $g_y^{-1}$.
+They argue that because Bayesian inference is joint and $\gamma$ appears in this likelihood in both the treatment 
+model and outcome model there is ``model feedback''.
+
+
+Let's rewrite the system of equations as:
+\begin{align*}
+    Y &= \mathbb{I}\{\beta X +  C_i^+ \delta + \varepsilon_1 > 0\} \\
+    X &= \mathbb{I}\{ C_i\gamma + \varepsilon_2 > 0 \} \\
+    \begin{pmatrix}
+        \varepsilon_1 \\
+        \varepsilon_2
+    \end{pmatrix} &\sim N\left(0, \begin{pmatrix}
+        1 & \rho \\
+        \rho & 1
+    \end{pmatrix}\right)
+\end{align*}
+Where we've normalised variance to 1 to make things easier (and this is only 
+identified up to scale anyway). Next, forget about likelihoods and start with what we want to know:
+\begin{align*}
+    E[Y | X = 1, C] - E[Y | X = 0, C] &= Pr(Y = 1 | X = 1, C) - Pr(Y = 1 | X = 0, C) \\
+    &= Pr( \beta  + \delta C^+ + \varepsilon_1 > 0 | C, C_i\gamma + \varepsilon_2 > 0) \\
+    &- Pr(\delta C^+ + \varepsilon_1 > 0 | C, C_i \gamma + \varepsilon_2 < 0)
+\end{align*}
+
+Using conditional normality we can always rewrite:
+\begin{align*}
+    \varepsilon_1 &= b\varepsilon_2 + u
+\end{align*}
+where $u \indep \varepsilon_2$ and $b = \frac{cov(\varepsilon_1, \varepsilon_2)}{var(\varepsilon_2)} = \rho$. 
+This gives, for $\rho > 0$:
+
+\begin{align*}
+    Pr(Y = 1 | X = 1, C) &= \frac{Pr(\beta + \delta C^+ + \rho \varepsilon_2 + U > 0 \cap C_i \gamma + \varepsilon_2  > 0)}{
+    Pr(C_i \gamma + \varepsilon_2 > 0)} \\
+    &= \frac{Pr(\varepsilon_2 > \max \{ - \frac{\beta + \delta C^+ + U}{\rho}, -C_i \gamma\})}{
+        Pr(\varepsilon_2 > -C_i \gamma)
+    } \\
+    &= \frac{1}{\Phi(C_i \gamma)} \int
+    Pr(\varepsilon_2 > \max \{ - \frac{\beta + \delta C^+ + u}{\rho}, -C_i \gamma\}) f(u) du
+\end{align*}
+
+
+where $f(u)$ is going to be some transformed normal density as it's the error from a projection 
+of one normal variable on another correlated normal variable. Well, $\varepsilon_2$ is 
+normal so:
+
+\begin{align*}
+    &= \frac{1}{\Phi(C_i \gamma)} \int
+    \Phi\left( \min \{  \frac{\beta + \delta C^+ + u}{\rho}, C_i \gamma\}\right) f(u) du
+\end{align*}
+
+
+Note that if $\rho < 0$ then we get:
+
+\begin{align*}
+    &= \frac{1}{\Phi(C_i \gamma)} \int
+    Pr(-C_i \gamma < \varepsilon_2 <  \frac{\beta + \delta C^+ + u}{\rho}) f(u) du \\
+    &= \frac{1}{\Phi(C_i \gamma)} \int \left(
+    \Phi\left(\frac{\beta + \delta C^- + u}{\rho}\right) - \Phi(-C_i \gamma)\right) f(u) du 
+\end{align*}
+
+In the Heckman model $\rho < 0, \rho > 0$ end up looking identical and my guess is 
+that if you integrate enough things by parts the same will be true here.
+
+If we compare this to the likelihood presented originally it's clear that we need 
+to do more than just stick in the propensity score to the link function. In fact, 
+from Heckman we know that if $g_y^{-1} = I(\cdot)$ i.e. the linear probability model
+then $h(\gamma, C_i) = \rho \frac{\phi(-C_i\gamma)}{1 - \Phi(C_i \gamma)}$ for $X = 1$ 
+and $-\rho \frac{\phi(-C\gamma)}{\Phi(C_i \gamma)}$.
+
+\end{document}

@@ -1,0 +1,162 @@
+---
+title: FAKE ZM Plots
+output: pdf_document
+---
+
+
+
+
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+opts_chunk$set(echo = FALSE, warning = FALSE, 
+               cache = FALSE, cache.path = "zm-plots-cache/", 
+                fig.align = "center")
+```
+
+
+## Histograms 
+
+## District Histograms of N Vaxxed per Week
+
+```{r histograms}
+
+include_graphics(
+    "../data/output/plots/fake-district-histogram-bcg-week-plot.png")
+
+```
+
+## Town Histograms of N Vaxxed per Week per Vaccine
+
+```{r town-histograms}
+
+include_graphics(
+    "../data/output/plots/fake-town-histogram-week.png")
+
+```
+
+## Calendar Time District Plots
+
+
+```{r district-indiv-month}
+
+include_graphics(
+    "../data/output/plots/fake-district-calendar-facet-penta1-month-plot.png")
+```
+
+```{r district-facet-indiv-month}
+
+include_graphics(
+    "../data/output/plots/fake-district-vaccine-calendar-month.png")
+```
+
+
+```{r district-facet-month}
+
+include_graphics(
+    "../data/output/plots/fake-district-vaccine-calendar-month.png")
+```
+
+
+
+
+```{r district-calendar-month}
+
+include_graphics(
+    "../data/output/plots/fake-district-calendar-measles1-month-plot.png")
+```
+
+
+## Calendar Time Town Plots
+
+
+```{r town-facet-calendar}
+
+include_graphics(
+    "../data/output/plots/fake-district-town-bcg-calendar-week-plot.png"
+    )
+```
+
+```{r town-calendar-week}
+
+include_graphics(
+    "../data/output/plots/fake-town-calendar-measles1-week-plot.png")
+```
+
+```{r town-calendar-month}
+
+include_graphics(
+    "../data/output/plots/fake-town-calendar-measles1-month-plot.png")
+```
+
+
+## Event Time District Plots
+
+```{r district-event-month}
+
+include_graphics(
+    "../data/output/plots/fake-district-event-time-measles1-month-plot.png")
+
+
+```
+
+## Event Time Town Plots
+
+```{r town-event-month}
+
+include_graphics(
+    "../data/output/plots/fake-town-event-time-measles1-month-plot.png")
+
+
+```
+
+```{r town-event-week}
+
+include_graphics(
+    "../data/output/plots/fake-town-event-time-measles1-week-plot.png")
+
+
+```
+
+
+
+Maybe instead of plotting town lines we should plot points and bin them - 
+but then might as well just show district/month??
+
+
+# Event Study Plots
+
+### What am I looking at?
+
+Event study estimates calculated using Callaway and Sant'Anna. I.e. we estimate 
+$ATT(g, t)$ for each time period and town and aggregate these into event time. 
+Standard errors are clustered at the district level but estimates use town level 
+data. 
+
+The month level plot collapses N vaccinations into number of vaccinations in each 
+town per month and sets the treatment time to the first of the month to 
+avoid contamination. 
+
+The week level plot collapses N vaccinations into number of vaccinations in each 
+town per week. Treatment time is set to the first day of the week to avoid 
+contamination.
+
+
+I don't have enough RAM to run daily estimates using my laptop even with dummy data.
+
+```{r town-es-month}
+
+include_graphics(
+    "../data/output/plots/fake-town-month-bcg-es-plot.png"
+)
+```
+
+
+```{r town-es-week}
+
+include_graphics(
+    "../data/output/plots/fake-town-week-bcg-es-plot.png"
+)
+
+
+```

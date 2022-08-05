@@ -1,0 +1,381 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimplePlus}
+
+\usepackage{hyperref}
+\usepackage{bm}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\setbeamertemplate{footline}{%
+  \raisebox{5pt}{\makebox[\paperwidth]{\hfill\makebox[10pt]{\scriptsize\insertframenumber}}}}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[short title]{Adaptive Trials and Participant Preferences} % The short title appears at the bottom of every slide, the full title is only on the title page
+\subtitle{}
+
+\author[Edward Jee] {Edward Jee}
+
+\institute[NTU] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+Development Tea
+}
+\date{\today} % Date, can be changed to a custom date
+
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{frame}
+    % Print the title page as the first slide
+    \titlepage
+\end{frame}
+
+\begin{frame}{Today's Plan}
+    % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+    \tableofcontents
+\end{frame}
+
+%------------------------------------------------
+\section{Adaptive Trials}
+%------------------------------------------------
+
+\begin{frame}{What is an Adaptive Trial?}
+
+    \begin{itemize}
+        \item An experimental trial where we change treatment assignments \textit{depending on the realisation of observed treatment outcomes.}
+        \item Each period we receive a new wave of participants and update treatment arm allocations 
+        using results from previous participants.
+        \item The goal is to maximise welfare of treatment participants, by learning 
+        about the optimal arm as quickly as possible. 
+        \item In computer science this is termed the \textit{multi-armed bandit} problem.
+    \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example Bandit}
+    \textit{And why are they called bandits?}
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[scale=0.1]{plots/bandit-image-example.png} 
+        \caption{Some real life bandits}
+        \label{<label>}
+    \end{figure}
+\end{frame}
+%------------------------------------------------
+
+\begin{frame}{Thompson Sampling}
+
+    A popular bandit algorithm is known as Thompson 
+    sampling:\footnote{Also known as probability matching.}
+\begin{enumerate}
+    \item At $t=0$ generate a prior, $Q_0$, over $\mu_k$, proceed to $t = 1$.
+    \item Sample $\nu_t \sim Q_{t-1}(\cdot | A_1, y_1, ..., A_{t-1}, y_{t-1})$
+    \item Choose $A_t = \arg\max_{i \in [k]} \mu_i(\nu_t)$ and observe $y_t$.
+    \item Update the posterior $Q_{t-1}(\cdot | A_1, y_1, ..., A_{t-1}, y_{t-1})$ given $y_t$.
+    \item Iterate $t = t+1$ and return to Step 2 until $t > T$.
+\end{enumerate}
+
+\end{frame}
+
+
+\begin{frame}
+
+    
+    In words:
+
+    \begin{itemize}
+        \item Generate a prior over each arm's rewards.
+        \item Take a random draw from this prior distribution and choose the best action given your draw.
+        \item Observe the reward associated with your action.
+        \item Update your posterior over arm rewards.
+        \item Today's posterior is tomorrow's prior $\rightarrow$ return to step two.
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Exploration-Exploitation Tradeoff}
+    Why do we like Thompson sampling?
+
+    \begin{itemize}
+        \item It neatly balances the exploration-exploitation tradeoff.
+        \item We don't want to spend all our time trying each arm in turn if one arm 
+        is clearly suboptimal.
+        \item Similarly, we don't want to commit too early to an arm and exclusively 
+        choose it when it's not the best arm. 
+    \end{itemize}
+
+    TS updates posterior beliefs each round and takes a \textit{random draw} from 
+    the posterior. This means we will choose to explore another arm over the 
+    "currently optimal" arm in proportion to the exact probability we believe it 
+    could be optimal.
+\end{frame}
+
+
+
+\begin{frame}{Beta-Bernoulli TS}
+
+    Suppose we face a Bernoulli bandit so $\mu \in [0,1]^k$ but 
+    each arm has a different probability of success. 
+
+
+    Learner has an independent beta prior with parameters $\alpha_i, \beta_i$:
+    \begin{align*}
+        p(\mu_i) &= \frac{\Gamma(\alpha_i + \beta_i)}{\Gamma(\alpha_i) \Gamma(\beta_i)} 
+        \mu_i^{\alpha_i - 1} (1 - \mu_i)^{\beta_i - 1}
+    \end{align*}
+
+    Each round we update:
+    \begin{align*}
+        (\alpha_{i, t+1}, \beta_{i, t+1}) =\begin{cases}
+            (\alpha_{i, t}, \beta_{i, t}) &  A_t \neq i \\
+            (\alpha_{i, t}, \beta_{i, t}) + (\mu_t, 1 - \mu_t) & A_t = i
+        \end{cases} 
+    \end{align*}
+   Posterior mean:
+    $$
+   \hat{\mu}_i = \frac{\alpha_i}{\alpha_i + \beta_i}
+   $$
+    $\alpha, \beta$ are "pseudo-counts" of successes and failures.
+
+    Due to conjugacy, the posterior will also be beta!
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{TS Example  - \href{https://towardsdatascience.com/thompson-sampling-fc28817eacb8}{Source}}
+
+   \begin{figure}[htbp]
+       \centering
+       \includegraphics[scale=0.2]{plots/ts-post.png}
+   \end{figure} 
+
+\end{frame}
+
+\begin{frame}{BB TS II}
+
+
+    Compare with the "greedy" alternative which doesn't sample from the posterior, 
+    merely updates $\hat{\mu}_i = \frac{\alpha_i}{\alpha_i + \beta_i}$:
+
+    \begin{figure}[htbp]
+        \centering
+       \includegraphics[scale=0.25]{plots/ts-example.png} 
+        \caption{Greedy vs Full Posterior Algorithm}
+    \end{figure} 
+
+\end{frame}
+
+
+\section*{Adaptive Trials in Economics}
+\begin{frame}{Bandits in Economics I}
+    \begin{itemize}
+        \item Computer Scientists focus on a single learner choosing one action.
+        \item We need to assign treatment proportions for multiple participants rather 
+        than a single action.
+        \item Therefore assign treatments in proportion to which they're optimal:
+        $p_k = \frac{1}{H} \sum^H_{h=1} \mathbb{I}\{\mu_k(\nu_{h})  > \mu_l(\nu_{h}) \}, k \neq l$
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Bandits in Economics II}
+
+
+    \begin{itemize}
+        \item Caria et al (2021) estimate the effect of cash, information, and psychological 
+    incentives on Syrian refugees and local jobseekers in Jordan. 
+        \item They use a \textbf{Tempered Thompson Algorithm} to balance maximising treatment 
+    precision whilst also maximising experimental participant welfare.
+    \end{itemize}
+
+    The algorithm:
+
+    \begin{enumerate}
+        \item Generate a prior.
+        \item For $t = 1,2,...,n$: sample $\nu_t \sim Q(\cdot | A_1, X_1, ..., A_{t-1}, X_{t-1})$
+        \item \begin{itemize}
+            \item With probability $\gamma$  sample $A_t$ from $\{1, ..., k\}$
+            \item With probability $1 - \gamma$ $A_t = \arg\max_{i \in [k]} \mu_i(\nu_t)$
+        \end{itemize} 
+    \end{enumerate}
+
+    \begin{exampleblock}{Balancing Precision and Welfare}
+        When $\gamma = 1$ we have a traditional RCT, when $\gamma = 0$ we have the 
+        Thompson Algorithm. 
+        When $0 < \gamma < 1$ TTA asymptotically minimises regret, subject to  
+        each treatment has probability of assignment at least $\gamma/k$.
+    \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Thompson Sampling\footnote{$i$ now indexes individuals, and $k = 1, ..., K$ treatment arms.}}
+
+    Whilst they care about endline outcomes - authors use \textbf{6 week rapid follow up} outcomes as
+    $Y_{it}^k$.
+
+    \begin{align*}
+       Y_{it}^k | (X_{it} = x, \mu^{kx}, \alpha^k, \beta^k) &\sim Ber(\mu^{kx}) \\
+       \mu^{kx} | (\alpha^k, \beta^k) &\sim Beta(\alpha^k, \beta^k) \\
+       (\alpha^k, \beta^k) &\sim \pi
+    \end{align*}
+
+\end{frame}
+
+
+
+
+\begin{frame}{Inference}
+
+    \begin{itemize}
+        \item Fortunately, inference is "easy" in TTA and we can just read off the posterior 
+    used for treatment assignment.
+        \item The authors also perform RI as an alternative.
+    \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Problems In This Setting I}
+
+
+    \begin{figure}[htbp]
+        \centering
+    %    \includegraphics[scale=0.2]{plots/ramadan.png} 
+        \caption{Non-stationary reward distribution?}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Problems In This Setting II}
+
+    \begin{figure}[htbp]
+        \centering
+    %    \includegraphics[scale=0.15]{plots/tta-assignment.png} 
+       \caption{Intermediate outcome chosen wasn't particularly indicative of 
+       final outcome.}
+    \end{figure}
+    
+
+\end{frame}
+
+\begin{frame}{Problems In This Setting III}
+
+   \begin{figure}[htbp]
+       \centering
+    %   \includegraphics[scale=0.15]{plots/good-tta-assignment.png} 
+   \end{figure} 
+
+       Simulations using \textbf{two month} outcomes.
+\end{frame}
+
+
+\begin{frame}{Happy RCT Participants?}
+
+    \begin{figure}[htbp]
+        \centering
+    %    \includegraphics[scale=0.3]{plots/welfare.png} 
+    \end{figure}
+
+    \begin{itemize}
+        \item $\Delta_1$ compares welfare from realised assignment to random assignment
+        \item $\Delta_2$ compares welfare from optimal targeted (i.e. policy per stratum) policy to no intervention.
+        \item $\Delta_3$ compares welfare from optimal non-targeted (i.e. policy fixed across strata) policy to no intervention.
+
+    \end{itemize}
+\end{frame}
+
+
+
+\section*{Adaptive Trials and Preferences}
+
+\begin{frame}{Adaptive trials and Preferences}
+        \begin{itemize}
+            \item Are we really maximising welfare or just $S = \sum_t^T\sum_i^N Y_{i,t}$?
+            \item How do we choose which outcome we care about?
+             \begin{itemize}
+                 \item Either across distinct measures?
+                 \item Or across timeframes like Caria et al?
+             \end{itemize}
+             \item Are we using the econometrician's loss function or the participant's? 
+    \end{itemize}
+
+    
+
+\end{frame}
+
+%------------------------------------------------
+\section{Adaptive Trials with}
+%------------------------------------------------
+
+\begin{frame}{Table}
+    \begin{table}
+        \begin{tabular}{l l l}
+            \toprule
+            \textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2} \\
+            \midrule
+            Treatment 1         & 0.0003262           & 0.562               \\
+            Treatment 2         & 0.0015681           & 0.910               \\
+            Treatment 3         & 0.0009271           & 0.296               \\
+            \bottomrule
+        \end{tabular}
+        \caption{Table caption}
+    \end{table}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Theorem}
+    \begin{theorem}[Mass--energy equivalence]
+        $E = mc^2$
+    \end{theorem}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Figure}
+    Uncomment the code on this slide to include your own image from the same directory as the template .TeX file.
+    %\begin{figure}
+    %\includegraphics[width=0.8\linewidth]{test}
+    %\end{figure}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
+    \frametitle{Citation}
+    An example of the \verb|\cite| command to cite within the presentation:\\~
+
+    This statement requires citation \cite{p1}.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{References}
+    % Beamer does not support BibTeX so references must be inserted manually as below
+    \footnotesize{
+        \begin{thebibliography}{99}
+            \bibitem[Smith, 2012]{p1} John Smith (2012)
+            \newblock Title of the publication
+            \newblock \emph{Journal Name} 12(3), 45 -- 678.
+        \end{thebibliography}
+    }
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+    \Huge{\centerline{\textbf{The End}}}
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
