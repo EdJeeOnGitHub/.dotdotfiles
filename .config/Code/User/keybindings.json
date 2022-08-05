@@ -3,19 +3,17 @@
     {
         "key": "ctrl+shift+m",
         "command": "type",
-        "args" : {"text" : "%>%"}
+        "args" : {"text" : "%>%"},
+        "when" : "editorTextFocus && editorLangId == r"
     }
     ,{
         "key": "alt+-",
         "command" : "type",
-        "args": {"text" : "<-"}
+        "args": {"text" : "<-"},
+        "when": "editorTextFocus && editorLangId == r"
     },
     {
         "key": "ctrl+shift+d",
         "command": "editor.debug.action.selectionToRepl"
-    },
-    {
-        "key" : "ctrl+t",
-        "command" : "workbench.action.terminal.focus"
     }
 ]

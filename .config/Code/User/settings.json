@@ -1,6 +1,4 @@
 {
-    "remote.SSH.showLoginTerminal": true,
-    "remote.SSH.useLocalServer": true,
     "vim.insertModeKeyBindings": [
         {
             "before": ["j", "j"],
@@ -11,7 +9,7 @@
     "workbench.colorCustomizations": {
         "editorRuler.foreground": "#b4758a"
     },
-    "vim.foldfix": true, 
+    
     "r.lintr.enable" : false,
     "r.bracketedPaste" : true,
     "r.lsp.diagnostics": false,
@@ -31,12 +29,6 @@
     "python.defaultInterpreterPath": "/opt/conda/bin/python",
     "terminal.integrated.inheritEnv": false,
     "r.rterm.linux": "/usr/bin/radian",
-    "editor.bracketPairColorization.enabled": true,
-    "editor.minimap.enabled": false,
-    "gitlens.advanced.messages": {
-        "suppressGitVersionWarning": true
-    },
-    "terminal.integrated.enableMultiLinePasteWarning": false,
-    "quarto.mathjax.theme": "dark",
+    "r.rmarkdown.knit.defaults.knitWorkingDirectory": "workspace root",
     "window.zoomLevel": 1
 }
