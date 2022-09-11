@@ -1,21 +1,64 @@
 inoremap jj <Esc>
-nnoremap <C-t> :NERDTreeToggle<CR>
-"Plugins"
-call plug#begin(stdpath('data') . '/plugged')
 
-Plug 'ayu-theme/ayu-vim' " or other package manager
+autocmd FileType r inoremap <buffer> <C-,> <Esc>:normal! a%>%<CR>a 
+autocmd FileType rnoweb inoremap <buffer> <C-,> <Esc>:normal! a%>%<CR>a 
+autocmd FileType rmd inoremap <buffer> <C-,> <Esc>:normal! a%>%<CR>a 
+
+call plug#begin()
+Plug 'jpalardy/vim-slime'
+Plug 'airblade/vim-gitgutter'
 Plug 'morhetz/gruvbox'
 Plug 'vim-airline/vim-airline'
 Plug 'preservim/nerdtree'
-Plug 'JuliaEditorSupport/julia-vim'
+Plug 'tpope/vim-fugitive'
 call plug#end()
 
-"...
-"set termguicolors     " enable true colors support
-"let ayucolor="light"  " for light version of theme
-"let ayucolor="mirage" " for mirage version of theme
-"let ayucolor="dark"   " for dark version of theme
-"colorscheme ayu
-autocmd vimenter * ++nested colorscheme gruvbox
+" NERDTree
+nnoremap <leader>n :NERDTreeFocus<CR>
+nnoremap <C-n> :NERDTree<CR>
+nnoremap <C-t> :NERDTreeToggle<CR>
+nnoremap <C-f> :NERDTreeFind<CR>
 
-let r_syntax_folding = 1
+" vim-slime
+let g:slime_target = "kitty"
+" remove default mappings
+let g:slime_no_mappings = 1 
+" add back default mappings
+xmap <c-c><c-c> <Plug>SlimeRegionSend 
+nmap <c-c><c-c> <Plug>SlimeParagraphSend
+nmap <c-c>v     <Plug>SlimeConfig
+"xmap <c-Enter> <Plug>SlimeRegionSend 
+nmap <c-Enter> <Plug>SlimeParagraphSend
+xmap <c-Enter> <Plug>SlimeRegionSend gv<esc>
+
+"function! _EscapeText_r(text)
+"  call system("cat > ~/.slime_r", a:text)
+"  return ["source('~/.slime_r', echo = TRUE, max.deparse.length = 4095)\r"]
+"endfunction
+
+set number                     " Show current line number
+set relativenumber             " Show relative line numbers
+
+syntax on " Syntax highlighting
+set ruler " Always shows location in file (line#)
+set smarttab " Autotabs for certain code
+set shiftwidth=4
+set tabstop=4
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" MULTIPURPOSE TAB KEY
+" Indent if we're at the beginning of a line. Else, do completion.
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! InsertTabWrapper()
+    let col = col('.') - 1
+    if !col || getline('.')[col - 1] !~ '\k'
+        return "\<tab>"
+    else
+        return "\<c-p>"
+    endif
+endfunction
+inoremap <expr> <tab> InsertTabWrapper()
+inoremap <s-tab> <c-n>
+
+
+set background=dark
+colorscheme gruvbox
