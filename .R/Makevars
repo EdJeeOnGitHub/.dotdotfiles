@@ -6,3 +6,6 @@ C11=$(CCACHE) g++$(VER)
 C14=$(CCACHE) g++$(VER)
 FC=$(CCACHE) gfortran$(VER)
 F77=$(CCACHE) gfortran$(VER)
+
+CXX14FLAGS=-O3 -march=native -mtune=native -fPIC
+CXX14=g++
