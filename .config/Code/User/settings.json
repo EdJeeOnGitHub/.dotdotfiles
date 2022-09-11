@@ -1,10 +1,13 @@
-{
+{   "editor.guides.bracketPairs" : "active",
+    "editor.hover.above": false,
     "vim.insertModeKeyBindings": [
         {
             "before": ["j", "j"],
             "after": ["<Esc>"]
         }
     ],
+    "editor.bracketPairColorization.enabled": true,
+    "editor.rulers": [80],
     "vim.foldfix": true,
     "r.lintr.enable" : false,
     "r.lsp.diagnostics": false,
@@ -40,5 +43,25 @@
     "vim.enableNeovim": true,
     "vim.neovimPath": "/usr/bin/nvim",
     "julia.enableCrashReporter": false,
-    "editor.inlineSuggest.enabled": true
+    "editor.inlineSuggest.enabled": true,
+    "julia.execution.codeInREPL": true,
+    "julia.symbolCacheDownload": true,
+    "julia.additionalArgs": [
+    "--threads=4"
+    ],
+    "python.defaultInterpreterPath": "/usr/local/bin/python",
+    "github.copilot.enable": {
+        "*": false,
+        "yaml": false,
+        "plaintext": true,
+        "markdown": false
+    },
+    "editor.minimap.enabled": false,
+    "julia.NumThreads": 4,
+    "vim.camelCaseMotion.enable": true,
+    "vim.neovimUseConfigFile": true,
+    "window.zoomLevel": -2,
+    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "editor.acceptSuggestionOnEnter": "smart",
+    "editor.hover.delay": 10
 }
