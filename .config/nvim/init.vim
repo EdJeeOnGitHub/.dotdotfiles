@@ -7,6 +7,7 @@ Plug 'ayu-theme/ayu-vim' " or other package manager
 Plug 'morhetz/gruvbox'
 Plug 'vim-airline/vim-airline'
 Plug 'preservim/nerdtree'
+Plug 'JuliaEditorSupport/julia-vim'
 call plug#end()
 
 "...
