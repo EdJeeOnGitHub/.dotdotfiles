@@ -321,9 +321,6 @@ bar {
 }
 
 # rofi bindings fancy application menu
-rofi_dir="$HOME/.config/rofi/launchers/type-2"
-rofi_theme="style-1"
-
 bindsym $mod+i exec rofi -show drun \
 	-theme /home/ed/.config/rofi/launchers/type-2/style-1.rasi
 
