@@ -9,8 +9,6 @@
     "editor.bracketPairColorization.enabled": true,
     "editor.rulers": [80],
     "vim.foldfix": true,
-    "r.lintr.enable" : false,
-    "r.lsp.diagnostics": false,
     "latex-workshop.docker.image.latex": "blang/latex:ubuntu",
     "latex-workshop.docker.enabled": true,
     "latex-workshop.view.pdf.viewer": "tab",
@@ -60,8 +58,10 @@
     "julia.NumThreads": 4,
     "vim.camelCaseMotion.enable": true,
     "vim.neovimUseConfigFile": true,
-    "window.zoomLevel": -2,
     "terminal.integrated.enableMultiLinePasteWarning": false,
     "editor.acceptSuggestionOnEnter": "smart",
-    "editor.hover.delay": 10
+    "editor.hover.delay": 10,
+    "r.lsp.diagnostics": false,
+    "r.lsp.enabled": false,
+    "window.zoomLevel": -3
 }
