@@ -33,7 +33,6 @@ gaps outer 0
 
 #do not show titlebar on windows: 
 new_window 1pixel
-
 #workspace_layout stacking
 
 #workspace_layout tabbed
@@ -56,6 +55,7 @@ exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 # X core fonts rendering does not support right-to-left and this being a bitmap
 # font, it doesn’t scale on retina/hidpi displays.
 font pango:Noto Sans Regular 10
+#font Fira Mono 20
 
 # thin borders:
 hide_edge_borders both
@@ -136,6 +136,10 @@ set $ws2 "2"
 set $ws3 "3"
 set $ws4 "4"
 set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9"
 
 #set $ws1 ""
 #set $ws2 ""
@@ -327,10 +331,29 @@ bindsym $mod+i exec rofi -show drun \
 bindsym $mod+o exec rofi -show window \
 	-theme /home/ed/.config/rofi/launchers/type-2/style-1.rasi
 
-bindsym F10 exec rofi -show window -line-padding 4 \
-                -lines 6 -padding 50 -hide-scrollbar \
-                -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"                
-                
+# bindsym F10 exec rofi -show window -line-padding 4 \
+#                -lines 6 -padding 50 -hide-scrollbar \
+#                -show-icons \
+#				 -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"                
+
+font pango:lemon 0
+for_window [class=".*"] title_format "<span font='Artwiz Lime 0'> > %title</span>"
+
+for_window [class="^.*"] border pixel 0
+for_window [floating] border pixel 20
+for_window [tiling] border pixel 0
+for_window [class="kitty"] border pixel 20
+
+
+# Gaps
+
+# gaps inner 15
+# gaps outer 0
+# smart_gaps on
+
+
+new_window pixel 0
+smart_borders on
 
 
 
