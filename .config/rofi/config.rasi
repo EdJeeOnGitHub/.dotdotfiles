@@ -1,0 +1,38 @@
+configuration {
+  modes: [ combi, drun ];
+  combi-modes: [ window, drun, run ];
+}
+
+ 
+/* Insert theme modifications after this */
+
+entry {
+    placeholder: "Run";
+}
+
+@theme "/usr/share/rofi/themes/gruvbox-dark-hard.rasi"
+
+element {
+  orientation: horizontal;
+  children: [ element-icon, element-text ];
+  spacing: 5px;
+}
+
+element-icon {
+    size: 2.5em;
+}
+
+
+element-text {
+    vertical-align: 0.5;
+	size: 500%;
+}
+
+listview {
+	lines: 5;
+	columns: 1;
+}
+
+window {
+	width: 25%;
+}
