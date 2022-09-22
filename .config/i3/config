@@ -131,11 +131,17 @@ bindsym $mod+a focus parent
 #bindsym $mod+d focus child
 
 # workspace-edit:
-set $ws1 ""
-set $ws2 ""
-set $ws3 ""
-set $ws4 ""
-set $ws5 ""
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+
+#set $ws1 ""
+#set $ws2 ""
+#set $ws3 ""
+#set $ws4 ""
+#set $ws5 ""
 
 bindsym $mod+s exec --no-startup-id ~/.config/i3/scripts/empty_workspace.sh
 
@@ -315,14 +321,14 @@ bar {
 }
 
 # rofi bindings fancy application menu
-bindsym $mod+i exec rofi -modi drun -show drun -line-padding 4 \
-                -columns 2 -padding 50 -hide-scrollbar \
-                -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"
-                
+rofi_dir="$HOME/.config/rofi/launchers/type-2"
+rofi_theme="style-1"
 
-bindsym $mod+o exec rofi -show window -line-padding 4 \
-                -lines 6 -padding 50 -hide-scrollbar \
-                -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"
+bindsym $mod+i exec rofi -show drun \
+	-theme /home/ed/.config/rofi/launchers/type-2/style-1.rasi
+
+bindsym $mod+o exec rofi -show window \
+	-theme /home/ed/.config/rofi/launchers/type-2/style-1.rasi
 
 bindsym F10 exec rofi -show window -line-padding 4 \
                 -lines 6 -padding 50 -hide-scrollbar \
