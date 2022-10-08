@@ -15,7 +15,7 @@
 # Please see http://i3wm.org/docs/userguide.html for a complete reference!
 
 # Adding additional monitor
-exec --no-startup-id ~/.screenlayout/pro-duo.sh
+exec --no-startup-id ~/.screenlayout/pro-default.sh
 
 # don't follow focus with mouse
 focus_follows_mouse no
