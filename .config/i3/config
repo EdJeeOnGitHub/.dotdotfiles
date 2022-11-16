@@ -403,17 +403,20 @@ bar {
 }
 
 # rofi bindings fancy application menu
-bindsym $mod+i exec rofi -modi drun -show drun -line-padding 4 \
-                -columns 2 -padding 50 -hide-scrollbar \
-                -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"
-                
+#bindsym $mod+i exec rofi -modi drun -show drun -line-padding 4 \
+#                -columns 2 -padding 50 -hide-scrollbar \
+#                -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"
+               
+bindsym $mod+i exec rofi -show drun \
+	-theme /home/ed/.config/rofi/launchers/type-2/style-1.rasi
+
+
 bindsym F8 exec rofi -modi drun -show drun -line-padding 4 \
                 -columns 2 -padding 50 -hide-scrollbar \
                 -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"
 
-bindsym $mod+o exec rofi -show window -line-padding 4 \
-                -lines 6 -padding 50 -hide-scrollbar \
-                -show-icons -drun-icon-theme "Arc-X-D" -font "Droid Sans Regular 10"
+bindsym $mod+o exec rofi -show window  \
+	-theme /home/ed/.config/rofi/launchers/type-2/style-1.rasi
 
 bindsym F10 exec rofi -show window -line-padding 4 \
                 -lines 6 -padding 50 -hide-scrollbar \
