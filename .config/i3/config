@@ -11,6 +11,10 @@
 # Adding additional monitor
 exec --no-startup-id ~/.screenlayout/pro-default.sh
 
+# polybar
+
+exec --no-startup-id ~/.config/polybar/launch.sh --grayblocks
+
 # don't follow focus with mouse
 focus_follows_mouse no
 
@@ -203,11 +207,11 @@ bindsym $mod+a focus parent
 
 
 # workspace-edit:
-set $ws1 ""
-set $ws2 ""
-set $ws3 ""
-set $ws4 ""
-set $ws5 ""
+#set $ws1 ""
+#set $ws2 ""
+#set $ws3 ""
+#set $ws4 ""
+#set $ws5 ""
 
 # kill focused window:
 bindsym $mod+c kill
@@ -387,20 +391,20 @@ set $ws10 "10"
 
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available):
-bar {
-	   font pango:Noto Sans Regular 18, FontAwesome 18
-    status_command i3blocks -c ~/.config/i3/i3blocks.conf 
-    position top
-    colors {
-      separator          #666666
-        background         #222222
-        statusline         #dddddd
-        focused_workspace  #0088CC #0088CC #ffffff
-        active_workspace   #333333 #333333 #ffffff
-        inactive_workspace #333333 #333333 #888888
-        urgent_workspace   #2f343a #900000 #ffffff
-    }
-}
+#bar {
+#	   font pango:Noto Sans Regular 18, FontAwesome 18
+#    status_command i3blocks -c ~/.config/i3/i3blocks.conf 
+#    position top
+#    colors {
+#      separator          #666666
+#        background         #222222
+#        statusline         #dddddd
+#        focused_workspace  #0088CC #0088CC #ffffff
+#        active_workspace   #333333 #333333 #ffffff
+#        inactive_workspace #333333 #333333 #888888
+#        urgent_workspace   #2f343a #900000 #ffffff
+#    }
+#}
 
 # rofi bindings fancy application menu
 #bindsym $mod+i exec rofi -modi drun -show drun -line-padding 4 \
@@ -615,8 +619,8 @@ bar {
 # When strip_workspace_numbers is set to yes,
 # any workspace that has a name of the form
 # “[n][:][NAME]” will display only the name.
-strip_workspace_numbers yes
-##strip_workspace_name no
+##strip_workspace_numbers yes
+strip_workspace_name no
 
 		    colors {
 		    separator          $purple
