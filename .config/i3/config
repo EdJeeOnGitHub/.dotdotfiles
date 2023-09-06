@@ -15,7 +15,7 @@
 # Please see http://i3wm.org/docs/userguide.html for a complete reference!
 
 # Adding additional monitor
-exec --no-startup-id ~/.screenlayout/4k-default.sh
+exec --no-startup-id ~/.screenlayout/1309-w-barry.sh
 
 # polybar
 exec --no-startup-id ~/.config/polybar/launch.sh --grayblocks
