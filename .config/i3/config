@@ -15,10 +15,8 @@
 # Please see http://i3wm.org/docs/userguide.html for a complete reference!
 
 # Adding additional monitor
-exec --no-startup-id ~/.screenlayout/1309-w-barry.sh
+exec --no-startup-id ~/.screenlayout/home.sh
 
-# polybar
-exec --no-startup-id ~/.config/polybar/launch.sh --grayblocks
 
 # don't follow focus with mouse
 focus_follows_mouse no
@@ -363,4 +361,6 @@ smart_borders on
 
 
 
+# polybar
+exec --no-startup-id ~/.config/polybar/launch.sh --grayblocks
 
