@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Define the remote host and the remote directory
+REMOTE_HOST="mistake-not"  # Change the username and IP address accordingly
+CURR_DIR="$PWD"
+
+# Check if an argument is provided for skipping a specific folder
+if [ -n "$1" ]; then
+    rsync -avz  --include="*.$1"  --exclude="*" "$REMOTE_HOST:$PWD/" "$PWD/"
+else
+    # Use rsync to sync from remote to local
+    rsync -avz --progress $EXCLUDE "$REMOTE_HOST:$PWD/" "$PWD/"
+fi
+
+
+
