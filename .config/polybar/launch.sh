@@ -18,9 +18,9 @@ launch_bar() {
 		bash "$dir"/pwidgets/launch.sh --main
 	else
 		if type "xrandr"; then
-		  for m in $(xrandr --query | grep " connected" | cut -d" " -f1); do
-			MONITOR=$m polybar --reload -q main -c "$dir/$style/config.ini" &
-		  done
+			for m in $(xrandr --query | grep " connected" | cut -d" " -f1 | grep -v '^HDMI-0$'); do
+				MONITOR=$m polybar --reload -q main -c "$dir/$style/config.ini" &
+			done
 		else
 		  polybar --reload -q main -c "$dir/$style/config.ini" &
 		fi
