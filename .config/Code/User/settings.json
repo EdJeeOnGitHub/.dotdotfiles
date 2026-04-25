@@ -10,25 +10,24 @@
     "editor.rulers": [80],
     "vim.foldfix": true,
     "latex-workshop.docker.image.latex": "blang/latex:ubuntu",
-    "latex-workshop.docker.enabled": true,
     "latex-workshop.view.pdf.viewer": "tab",
-    "workbench.colorTheme": "Gruvbox Dark (Hard)",
+    "latex-workshop.latex.outDir" : "%DIR%/build",
     "git.ignoreLegacyWarning": true,
     "window.menuBarVisibility": "toggle",
     "workbench.statusBar.visible": true,
     "breadcrumbs.enabled": true,
     "terminal.integrated.commandsToSkipShell": [
-        "language-julia.interrupt"
+        "language-julia.interrupt",
+        "matlab.interrupt"
     ],
     "julia.enableTelemetry": true,
     "editor.renderControlCharacters": true,
     "editor.fontLigatures": true,
-    "editor.fontFamily": "'Fira Code', 'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback'",
-    "terminal.integrated.fontFamily": " 'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback'",
+    "editor.fontFamily": "'FiraCode Nerd Font'",
+    "terminal.integrated.fontFamily": " 'FiraCode Nerd Font', 'monospace', monospace, 'Droid Sans Fallback'",
     "terminal.external.linuxExec": "kitty",
     "editor.fontSize": 16,
     "r.sessionWatcher": true,
-    "jupyter.interactiveWindowMode": "perFile",
     "jupyter.askForKernelRestart": false,
     "r.bracketedPaste": true,
     "r.rterm.linux": "/usr/bin/radian",
@@ -44,18 +43,16 @@
     "editor.inlineSuggest.enabled": true,
     "julia.execution.codeInREPL": true,
     "julia.symbolCacheDownload": true,
-    "julia.additionalArgs": [
-    "--threads=4"
-    ],
-    "python.defaultInterpreterPath": "/usr/local/bin/python",
+    "python.defaultInterpreterPath": "/usr/bin/python",
     "github.copilot.enable": {
-        "*": false,
+        "quarto": false,
+        "*": true,
         "yaml": false,
         "plaintext": true,
         "markdown": false
     },
     "editor.minimap.enabled": false,
-    "julia.NumThreads": 4,
+    "julia.NumThreads": 10, // This get overwritten by julia.additionalArgs above
     "vim.camelCaseMotion.enable": true,
     "vim.neovimUseConfigFile": true,
     "terminal.integrated.enableMultiLinePasteWarning": false,
@@ -63,5 +60,15 @@
     "editor.hover.delay": 10,
     "r.lsp.diagnostics": false,
     "r.lsp.enabled": false,
-    "window.zoomLevel": -3
+    "r.plot.useHttpgd": true,
+    "window.confirmSaveUntitledWorkspace": false,
+    "github.copilot.editor.enableAutoCompletions": true,
+    "jupyter.interactiveWindow.creationMode": "perFile",
+    "julia.lint.run": false,
+    "julia.executablePath": "/home/ed/.juliaup/bin/julia",
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "r.rpath.linux": "/usr/bin/R",
+    "claudeCode.useTerminal": true,
+    "julia.useProgressFrontend": false
 }

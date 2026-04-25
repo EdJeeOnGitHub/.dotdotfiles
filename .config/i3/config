@@ -173,10 +173,11 @@ exec --no-startup-id dex -a -s /etc/xdg/autostart/:~/.config/autostart
 
 # transparency:
 #exec --no-startup-id xcompmgr -c
-exec --no-startup-id picom -cC
+#exec --no-startup-id picom -cC
 
 #set wallpaper:
-exec --no-startup-id nitrogen --restore
+# feh works better with JetKVM
+exec_always --no-startup-id feh --bg-fill /home/ed/Pictures/T7iBumf.jpeg /home/ed/Pictures/T7iBumf.jpeg
 
 #set powersavings for display:
 exec --no-startup-id xset s 480 dpms 600 600 600
@@ -196,6 +197,8 @@ for_window [class="qt5ct" instance="qt5ct"] floating enable
 for_window [class="Blueberry.py" instance="blueberry.py"] floating enable
 for_window [class="Bluetooth-sendto" instance="bluetooth-sendto"] floating enable
 for_window [class="Pamac-manager"] floating enable
+
+for_window [title="Open File"] resize set 800 600
 
 # resize floating windows with mouse scroll:
 bindsym --whole-window --border $mod+button4 resize shrink height 5 px or 5 ppt
@@ -348,6 +351,9 @@ for_window [floating] border pixel 20
 for_window [tiling] border pixel 0
 for_window [class="kitty"] border pixel 0
 
+for_window [class="Thunar"] resize set 640 480 #to change size of Thunar file manager, found by xprop
+for_window [window_role="(?i)GtkFileChooserDialog"] resize set 640 480 #to set size of file choose dialog
+for_window [class=".*"] resize set 640 480 #to change size of floating windows
 
 # Gaps
 

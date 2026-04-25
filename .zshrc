@@ -105,3 +105,29 @@ eval "$(starship init zsh)"
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+#
+path+=('/opt/rocm/bin')
+
+export GUROBI_HOME="/opt/gurobi1000/linux64"
+export PATH="${PATH}:${GUROBI_HOME}/bin"
+#export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GUROBI_HOME}/lib"
+export PATH="${PATH}:/home/ed/.config/ed-scripts"
+
+# Created by `pipx` on 2024-05-28 14:52:22
+export PATH="$PATH:/home/ed/.local/bin"
+
+
+# Load secrets from a private untracked file
+[[ -f ~/.secrets.zsh ]] && source ~/.secrets.zsh
+# >>> juliaup initialize >>>
+
+# !! Contents within this block are managed by juliaup !!
+
+path=('/home/ed/.juliaup/bin' $path)
+export PATH
+
+# <<< juliaup initialize <<<
+#
+  autoload -U bashcompinit                                                    
+  bashcompinit
+  eval "$(register-python-argcomplete harmonizer)" 
